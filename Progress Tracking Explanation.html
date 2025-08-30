@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracking Explanation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #007AFF;
+            text-align: center;
+        }
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .card {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #007AFF;
+            border-bottom: 2px solid #007AFF;
+            padding-bottom: 10px;
+        }
+        .example {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .progress {
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #34C759;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .best-set {
+            background: #007AFF;
+        }
+        .volume {
+            background: #5856D6;
+        }
+        .key-point {
+            background: #e6f7ff;
+            padding: 10px;
+            border-left: 4px solid #007AFF;
+            margin: 10px 0;
+        }
+        .use-case {
+            background: #fff8e6;
+            padding: 10px;
+            border-left: 4px solid #FF9500;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Understanding Progress Tracking</h1>
+    
+    <p>Your workout tracker measures progress in two different ways to give you a complete picture of your improvements.</p>
+    
+    <div class="comparison">
+        <div class="card">
+            <h2>Best Set Progress</h2>
+            <p>Compares your single best set from first to most recent workout</p>
+            
+            <div class="example">
+                <h3>Example: Bench Press</h3>
+                <p><strong>First Workout:</strong><br>
+                Set 1: 10 reps × 50kg = 500 volume<br>
+                Set 2: 8 reps × 55kg = 440 volume<br>
+                Set 3: 6 reps × 60kg = 360 volume</p>
+                
+                <p><strong>Best Set:</strong> 500 volume</p>
+            </div>
+            
+            <div class="example">
+                <h3>Recent Workout</h3>
+                <p><strong>Recent Workout:</strong><br>
+                Set 1: 8 reps × 70kg = 560 volume<br>
+                Set 2: 6 reps × 75kg = 450 volume<br>
+                Set 3: 5 reps × 80kg = 400 volume</p>
+                
+                <p><strong>Best Set:</strong> 560 volume</p>
+            </div>
+            
+            <div class="progress">
+                <div class="progress-fill best-set" style="width: 70%">+12% Improvement</div>
+            </div>
+            
+            <div class="key-point">
+                <strong>Key Point:</strong> Tracks your maximum strength and performance in a single set.
+            </div>
+            
+            <div class="use-case">
+                <strong>Best for:</strong> Measuring pure strength gains and peak performance.
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Total Volume Progress</h2>
+            <p>Compares the sum of all sets from first to most recent workout</p>
+            
+            <div class="example">
+                <h3>Example: Bench Press</h3>
+                <p><strong>First Workout:</strong><br>
+                Set 1: 10 reps × 50kg = 500 volume<br>
+                Set 2: 8 reps × 55kg = 440 volume<br>
+                Set 3: 6 reps × 60kg = 360 volume</p>
+                
+                <p><strong>Total Volume:</strong> 500 + 440 + 360 = 1300</p>
+            </div>
+            
+            <div class="example">
+                <h3>Recent Workout</h3>
+                <p><strong>Recent Workout:</strong><br>
+                Set 1: 8 reps × 70kg = 560 volume<br>
+                Set 2: 6 reps × 75kg = 450 volume<br>
+                Set 3: 5 reps × 80kg = 400 volume</p>
+                
+                <p><strong>Total Volume:</strong> 560 + 450 + 400 = 1410</p>
+            </div>
+            
+            <div class="progress">
+                <div class="progress-fill volume" style="width: 85%">+8.5% Improvement</div>
+            </div>
+            
+            <div class="key-point">
+                <strong>Key Point:</strong> Tracks your overall workout volume and endurance.
+            </div>
+            
+            <div class="use-case">
+                <strong>Best for:</strong> Measuring overall workout intensity and muscular endurance.
+            </div>
+        </div>
+    </div>
+    
+    <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin-top: 30px;">
+        <h2>Why Both Metrics Matter</h2>
+        <p>These two progress measurements give you different insights into your training:</p>
+        
+        <ul>
+            <li><strong>Best Set Progress</strong> shows your strength gains - are you lifting heavier weights or doing more reps with the same weight?</li>
+            <li><strong>Total Volume Progress</strong> shows your endurance gains - are you able to sustain higher volume across all your sets?</li>
+        </ul>
+        
+        <p>In some cases, you might see a big improvement in one metric but not the other. For example:</p>
+        
+        <div class="example">
+            <p>If your Best Set Progress increases significantly but Total Volume Progress stays the same, it means you're getting stronger but may need to work on endurance.</p>
+            <p>If your Total Volume Progress increases but Best Set Progress stays the same, it means you're building endurance but may need to focus on increasing your maximum strength.</p>
+        </div>
+    </div>
+</body>
+</html>
