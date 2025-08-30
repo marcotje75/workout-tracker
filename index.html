@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Workout Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            padding: 15px;
+            min-height: 100vh;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: #ff2d55;
+            margin-bottom: 5px;
+        }
+        
+        .date-display {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .workout-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .workout-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #007AFF;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .exercise {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .exercise:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .exercise-name {
+            font-weight: 600;
+            font-size: 18px;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        
+        .toggle-exercise {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+        
+        .edit-exercise {
+            background: #007AFF;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 14px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .delete-exercise {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 14px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .set {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .set-number {
+            width: 30px;
+            font-weight: 600;
+        }
+        
+        input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 70px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .add-set, .add-exercise, .save-btn, .weight-btn {
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        .add-set:hover, .add-exercise:hover, .save-btn:hover, .weight-btn:hover {
+            background-color: #0056CC;
+        }
+        
+        .delete-set {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .workout-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .workout-btn {
+            flex: 1;
+            padding: 15px 5px;
+            text-align: center;
+            background: white;
+            border: 2px solid #007AFF;
+            border-radius: 12px;
+            margin: 0 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .workout-btn.active {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .history-btn {
+            background-color: #8E8E93;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 14px;
+            padding: 10px;
+        }
+        
+        @media (max-width: 400px) {
+            .workout-selector {
+                flex-direction: column;
+            }
+            
+            .workout-btn {
+                margin: 5px 0;
+            }
+        }
+        
+        .instructions {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #007AFF;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .save-info {
+            background: #e6f7ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #007AFF;
+        }
+        
+        .data-info {
+            background: #fff8e6;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ffcc00;
+            font-size: 14px;
+        }
+        
+        #history-modal, #progress-modal, #weight-modal, #backup-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .close-modal {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .history-item, .progress-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-item:last-child, .progress-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-date, .progress-date {
+            font-weight: bold;
+            color: #007AFF;
+        }
+        
+        .history-type, .progress-type {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .history-exercise, .progress-exercise {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        
+        .empty-history {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .progress-chart {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .weight-input-container {
+            display: flex;
+            margin: 15px 0;
+        }
+        
+        #weight-input {
+            flex-grow: 1;
+            margin-right: 10px;
+            width: auto;
+        }
+        
+        .weight-list {
+            margin-top: 15px;
+        }
+        
+        .weight-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .tab-btn.active {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .comparison {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e6f7ff;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .improvement {
+            color: green;
+            font-weight: bold;
+        }
+        
+        .decline {
+            color: red;
+            font-weight: bold;
+        }
+        
+        .backup-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .backup-btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: #007AFF;
+            color: white;
+            cursor: pointer;
+        }
+        
+        #export-data {
+            background: #34C759;
+        }
+        
+        #import-data {
+            background: #FF9500;
+        }
+        
+        #clear-data {
+            background: #FF3B30;
+        }
+        
+        .history-details {
+            margin-top: 8px;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #007AFF;
+            border-radius: 5px;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-item {
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 16px;
+            color: #007AFF;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .volume-badge {
+            background: #007AFF;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .exercise-max {
+            margin-top: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gym Workout Tracker</h1>
+            <div class="date-display" id="currentDate">Loading date...</div>
+        </header>
+        
+        <div class="instructions">
+            <h3>How to Save to Home Screen in Edge:</h3>
+            <ol>
+                <li>Tap the three dots (...) in the bottom navigation bar</li>
+                <li>Select "Add to Home Screen" from the menu</li>
+                <li>Name your app and tap "Add"</li>
+                <li>You can now access the app from your home screen</li>
+            </ol>
+        </div>
+        
+        <div class="data-info">
+            <strong>Data Safety:</strong> Your data is stored in your browser's local storage. 
+            To prevent data loss, use the "Backup & Restore" feature to export your data regularly.
+            <button class="backup-btn" id="open-backup" style="margin-top: 10px; width: 100%;">Backup & Restore Data</button>
+        </div>
+        
+        <div class="save-info">
+            <strong>When to Save:</strong> Press "Save Workout" only after completing ALL exercises for the day. This saves your entire session.
+        </div>
+        
+        <div class="workout-selector">
+            <div class="workout-btn active" data-workout="biceps-chest">Biceps & Chest</div>
+            <div class="workout-btn" data-workout="triceps-shoulders-back">Triceps, Shoulders & Back</div>
+        </div>
+        
+        <div class="workout-card" id="workout-content">
+            <!-- Workout content will be generated here -->
+        </div>
+        
+        <button class="add-exercise" id="addExercise">+ Add Exercise</button>
+        <button class="weight-btn" id="logWeight">Log Today's Weight</button>
+        <button class="save-btn" id="saveWorkout">Save Workout</button>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="history-btn" id="viewHistory" style="flex: 1;">View History</button>
+            <button class="history-btn" id="viewProgress" style="flex: 1;">View Progress</button>
+        </div>
+    </div>
+    
+    <div id="history-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Workout History</h2>
+                <button class="close-modal" id="close-history">×</button>
+            </div>
+            <div id="history-content">
+                <!-- History content will be generated here -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="progress-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Progress Tracking</h2>
+                <button class="close-modal" id="close-progress">×</button>
+            </div>
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="exercises">Exercises</button>
+                <button class="tab-btn" data-tab="weight">Weight</button>
+                <button class="tab-btn" data-tab="stats">Statistics</button>
+            </div>
+            <div class="tab-content active" id="exercises-tab">
+                <div id="progress-content">
+                    <!-- Progress content will be generated here -->
+                </div>
+            </div>
+            <div class="tab-content" id="weight-tab">
+                <div id="weight-progress-content">
+                    <!-- Weight progress content will be generated here -->
+                </div>
+            </div>
+            <div class="tab-content" id="stats-tab">
+                <div id="stats-content">
+                    <!-- Statistics content will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="weight-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Log Your Weight</h2>
+                <button class="close-modal" id="close-weight">×</button>
+            </div>
+            <div class="weight-input-container">
+                <input type="number" id="weight-input" placeholder="Enter weight in kg" step="0.1" min="0">
+                <button class="save-btn" id="save-weight" style="width: auto; padding: 12px;">Save</button>
+            </div>
+            <div class="weight-list" id="weight-list">
+                <!-- Weight entries will be listed here -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="backup-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Backup & Restore Data</h2>
+                <button class="close-modal" id="close-backup">×</button>
+            </div>
+            <div class="backup-buttons">
+                <button class="backup-btn" id="export-data">Export Data</button>
+                <button class="backup-btn" id="import-data">Import Data</button>
+                <button class="backup-btn" id="clear-data">Clear All Data</button>
+            </div>
+            <div id="backup-status" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none;"></div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Your data is stored locally on your device</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+            
+            // Initialize workout data
+            let workoutData = {
+                type: 'biceps-chest',
+                date: now.toISOString().split('T')[0],
+                exercises: []
+            };
+            
+            // Load custom exercises from localStorage if they exist
+            function loadCustomExercises() {
+                const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
+                return customExercises;
+            }
+            
+            // Save custom exercises to localStorage
+            function saveCustomExercises(customExercises) {
+                localStorage.setItem('customExercises', JSON.stringify(customExercises));
+            }
+            
+            // Get default exercises for a workout type
+            function getDefaultExercises(type) {
+                const customExercises = loadCustomExercises();
+                
+                if (type === 'biceps-chest') {
+                    return [
+                        {
+                            name: customExercises['biceps-chest']?.[0] || 'Bench Press',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false // All exercises start collapsed
+                        },
+                        {
+                            name: customExercises['biceps-chest']?.[1] || 'Bicep Curls',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        }
+                    ];
+                } else {
+                    return [
+                        {
+                            name: customExercises['triceps-shoulders-back']?.[0] || 'Shoulder Press',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: customExercises['triceps-shoulders-back']?.[1] || 'Tricep Extensions',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: customExercises['triceps-shoulders-back']?.[2] || 'Lat Pulldowns',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        }
+                    ];
+                }
+            }
+            
+            // Initialize workout data with custom exercises if available
+            workoutData.exercises = getDefaultExercises(workoutData.type);
+            
+            // Render workout based on type
+            function renderWorkout() {
+                const workoutContent = document.getElementById('workout-content');
+                workoutContent.innerHTML = '';
+                
+                workoutData.exercises.forEach((exercise, exerciseIndex) => {
+                    const exerciseEl = document.createElement('div');
+                    exerciseEl.className = 'exercise';
+                    
+                    exerciseEl.innerHTML = `
+                        <div class="exercise-header">
+                            <button class="toggle-exercise" data-exercise="${exerciseIndex}">${exercise.expanded ? '−' : '+'}</button>
+                            <div class="exercise-name" data-exercise="${exerciseIndex}">${exercise.name}</div>
+                            <button class="edit-exercise" data-exercise="${exerciseIndex}">✎</button>
+                            <button class="delete-exercise" data-exercise="${exerciseIndex}">×</button>
+                        </div>
+                        ${exercise.expanded ? `
+                        <div class="sets">
+                            ${exercise.sets.map((set, setIndex) => `
+                                <div class="set">
+                                    <div class="set-number">${setIndex + 1}</div>
+                                    <input type="number" placeholder="Reps" min="0" class="reps-input" 
+                                        data-exercise="${exerciseIndex}" data-set="${setIndex}" 
+                                        value="${set.reps}">
+                                    <input type="number" placeholder="Weight" min="0" class="weight-input" 
+                                        data-exercise="${exerciseIndex}" data-set="${setIndex}" 
+                                        value="${set.weight}">
+                                    <button class="delete-set" data-exercise="${exerciseIndex}" data-set="${setIndex}">×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="add-set" data-exercise="${exerciseIndex}">+ Add Set</button>
+                        ` : ''}
+                    `;
+                    
+                    workoutContent.appendChild(exerciseEl);
+                });
+                
+                // Add event listeners to inputs
+                document.querySelectorAll('.reps-input, .weight-input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        const exerciseIndex = parseInt(this.dataset.exercise);
+                        const setIndex = parseInt(this.dataset.set);
+                        
+                        if (this.classList.contains('reps-input')) {
+                            workoutData.exercises[exerciseIndex].sets[setIndex].reps = this.value;
+                        } else {
+                            workoutData.exercises[exerciseIndex].sets[setIndex].weight = this.value;
+                        }
+                    });
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-set').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const exerciseIndex = parseInt(this.dataset.exercise);
+                        const setIndex = parseInt(this.dataset.set);
+                        
+                        if (workoutData.exercises[exerciseIndex].sets.length > 1) {
+                            workoutData.exercises[exerciseIndex].sets.splice(setIndex, 1);
+                            renderWorkout();
+                        }
+                    });
+                });
+                
+                // Add event listeners to add-set buttons
+                document.querySelectorAll('.add-set').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const exerciseIndex = parseInt(this.dataset.exercise);
+                        workoutData.exercises[exerciseIndex].sets.push({ reps: '', weight: '' });
+                        renderWorkout();
+                    });
+                });
+                
+                // Add event listeners to toggle buttons
+                document.querySelectorAll('.toggle-exercise, .exercise-name').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const exerciseIndex = parseInt(this.dataset.exercise);
+                        workoutData.exercises[exerciseIndex].expanded = !workoutData.exercises[exerciseIndex].expanded;
+                        renderWorkout();
+                    });
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-exercise').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const exerciseIndex = parseInt(this.dataset.exercise);
+                        const newName = prompt('Enter new exercise name:', workoutData.exercises[exerciseIndex].name);
+                        if (newName) {
+                            workoutData.exercises[exerciseIndex].name = newName;
+                            
+                            // Save this as a custom exercise for this workout type
+                            const customExercises = loadCustomExercises();
+                            if (!customExercises[workoutData.type]) {
+                                customExercises[workoutData.type] = [];
+                            }
+                            
+                            // Update the custom exercise name at this position
+                            customExercises[workoutData.type][exerciseIndex] = newName;
+                            saveCustomExercises(customExercises);
+                            
+                            renderWorkout();
+                        }
+                    });
+                });
+                
+                // Add event listeners to delete exercise buttons
+                document.querySelectorAll('.delete-exercise').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const exerciseIndex = parseInt(this.dataset.exercise);
+                        if (workoutData.exercises.length > 1) {
+                            workoutData.exercises.splice(exerciseIndex, 1);
+                            
+                            // Also remove from custom exercises
+                            const customExercises = loadCustomExercises();
+                            if (customExercises[workoutData.type] && customExercises[workoutData.type][exerciseIndex]) {
+                                customExercises[workoutData.type].splice(exerciseIndex, 1);
+                                saveCustomExercises(customExercises);
+                            }
+                            
+                            renderWorkout();
+                        } else {
+                            alert('You need at least one exercise.');
+                        }
+                    });
+                });
+            }
+            
+            // Initial render
+            renderWorkout();
+            
+            // Workout type selector
+            document.querySelectorAll('.workout-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.workout-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    workoutData.type = this.dataset.workout;
+                    
+                    // Load exercises for this type (with custom names if available)
+                    workoutData.exercises = getDefaultExercises(workoutData.type);
+                    
+                    renderWorkout();
+                });
+            });
+            
+            // Add exercise button
+            document.getElementById('addExercise').addEventListener('click', function() {
+                const exerciseName = prompt('Enter exercise name:');
+                if (exerciseName) {
+                    workoutData.exercises.push({
+                        name: exerciseName,
+                        sets: [{ reps: '', weight: '' }],
+                        expanded: true // New exercises start expanded
+                    });
+                    
+                    // Save this as a custom exercise for this workout type
+                    const customExercises = loadCustomExercises();
+                    if (!customExercises[workoutData.type]) {
+                        customExercises[workoutData.type] = [];
+                    }
+                    customExercises[workoutData.type].push(exerciseName);
+                    saveCustomExercises(customExercises);
+                    
+                    renderWorkout();
+                }
+            });
+            
+            // Save workout button
+            document.getElementById('saveWorkout').addEventListener('click', function() {
+                // Validate that at least one exercise has data
+                let hasData = false;
+                for (const exercise of workoutData.exercises) {
+                    for (const set of exercise.sets) {
+                        if (set.reps || set.weight) {
+                            hasData = true;
+                            break;
+                        }
+                    }
+                    if (hasData) break;
+                }
+                
+                if (!hasData) {
+                    alert('Please enter at least some workout data before saving.');
+                    return;
+                }
+                
+                // Get saved workouts from localStorage or initialize empty array
+                const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                
+                // Add current workout
+                savedWorkouts.push({...workoutData});
+                
+                // Save back to localStorage
+                localStorage.setItem('workouts', JSON.stringify(savedWorkouts));
+                
+                alert('Workout saved successfully!');
+                
+                // Reset for next workout
+                workoutData.exercises.forEach(exercise => {
+                    exercise.sets.forEach(set => {
+                        set.reps = '';
+                        set.weight = '';
+                    });
+                });
+                renderWorkout();
+            });
+            
+            // View history button - Enhanced with more details
+            document.getElementById('viewHistory').addEventListener('click', function() {
+                const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                const historyContent = document.getElementById('history-content');
+                const historyModal = document.getElementById('history-modal');
+                
+                if (savedWorkouts.length === 0) {
+                    historyContent.innerHTML = '<div class="empty-history">No workouts saved yet.</div>';
+                } else {
+                    historyContent.innerHTML = '';
+                    
+                    // Reverse to show newest first
+                    savedWorkouts.slice().reverse().forEach((workout, index) => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        
+                        const date = new Date(workout.date);
+                        const dateStr = date.toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        
+                        let exercisesHtml = '';
+                        let totalVolume = 0;
+                        
+                        workout.exercises.forEach(exercise => {
+                            let exerciseVolume = 0;
+                            let exerciseHtml = `<div class="history-exercise"><strong>${exercise.name}</strong>: `;
+                            
+                            const sets = exercise.sets.map(set => {
+                                if (set.reps && set.weight) {
+                                    const volume = parseFloat(set.reps) * parseFloat(set.weight);
+                                    exerciseVolume += volume;
+                                    return `${set.reps} reps × ${set.weight} <span class="volume-badge">${volume}</span>`;
+                                } else if (set.reps) {
+                                    return `${set.reps} reps`;
+                                } else if (set.weight) {
+                                    return `${set.weight} (weight only)`;
+                                }
+                                return '';
+                            }).filter(set => set !== '').join(', ');
+                            
+                            totalVolume += exerciseVolume;
+                            
+                            exerciseHtml += sets;
+                            exerciseHtml += `</div>`;
+                            exerciseHtml += `<div class="exercise-max">Volume: ${exerciseVolume.toFixed(1)}</div>`;
+                            
+                            exercisesHtml += exerciseHtml;
+                        });
+                        
+                        historyItem.innerHTML = `
+                            <div class="history-date">${dateStr}</div>
+                            <div class="history-type">${workout.type.replace('-', ' & ')}</div>
+                            <div class="history-details">Total Volume: ${totalVolume.toFixed(1)}</div>
+                            ${exercisesHtml}
+                        `;
+                        
+                        historyContent.appendChild(historyItem);
+                    });
+                }
+                
+                historyModal.style.display = 'flex';
+            });
+            
+            // View progress button - Enhanced with more details
+            document.getElementById('viewProgress').addEventListener('click', function() {
+                const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                const progressContent = document.getElementById('progress-content');
+                const progressModal = document.getElementById('progress-modal');
+                
+                if (savedWorkouts.length === 0) {
+                    progressContent.innerHTML = '<div class="empty-history">No workouts saved yet.</div>';
+                } else {
+                    progressContent.innerHTML = '';
+                    
+                    // Group workouts by exercise
+                    const exerciseData = {};
+                    
+                    savedWorkouts.forEach(workout => {
+                        workout.exercises.forEach(exercise => {
+                            if (!exerciseData[exercise.name]) {
+                                exerciseData[exercise.name] = [];
+                            }
+                            
+                            // Calculate best set for this exercise in this workout
+                            let bestSet = null;
+                            let exerciseVolume = 0;
+                            
+                            exercise.sets.forEach(set => {
+                                if (set.reps && set.weight) {
+                                    const volume = parseFloat(set.reps) * parseFloat(set.weight);
+                                    exerciseVolume += volume;
+                                    
+                                    if (!bestSet || volume > bestSet.volume) {
+                                        bestSet = {
+                                            reps: set.reps,
+                                            weight: set.weight,
+                                            volume: volume,
+                                            date: workout.date
+                                        };
+                                    }
+                                }
+                            });
+                            
+                            if (bestSet) {
+                                exerciseData[exercise.name].push({
+                                    bestSet: bestSet,
+                                    volume: exerciseVolume,
+                                    date: workout.date
+                                });
+                            }
+                        });
+                    });
+                    
+                    // Display progress for each exercise
+                    for (const exerciseName in exerciseData) {
+                        if (exerciseData[exerciseName].length > 1) {
+                            const exerciseProgress = document.createElement('div');
+                            exerciseProgress.className = 'progress-item';
+                            
+                            // Sort by date
+                            exerciseData[exerciseName].sort((a, b) => new Date(a.date) - new Date(b.date));
+                            
+                            const first = exerciseData[exerciseName][0];
+                            const last = exerciseData[exerciseName][exerciseData[exerciseName].length - 1];
+                            
+                            const improvement = ((last.bestSet.volume - first.bestSet.volume) / first.bestSet.volume * 100).toFixed(1);
+                            const volumeImprovement = ((last.volume - first.volume) / first.volume * 100).toFixed(1);
+                            
+                            exerciseProgress.innerHTML = `
+                                <div class="progress-date"><strong>${exerciseName}</strong></div>
+                                <div class="progress-type">
+                                    First: ${first.bestSet.reps} reps × ${first.bestSet.weight} (${first.bestSet.volume.toFixed(1)} volume)<br>
+                                    Latest: ${last.bestSet.reps} reps × ${last.bestSet.weight} (${last.bestSet.volume.toFixed(1)} volume)
+                                </div>
+                                <div class="comparison">
+                                    Best Set Progress: <span class="${improvement >= 0 ? 'improvement' : 'decline'}">${improvement}%</span><br>
+                                    Total Volume Progress: <span class="${volumeImprovement >= 0 ? 'improvement' : 'decline'}">${volumeImprovement}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${Math.min(100, Math.max(0, parseFloat(improvement) + 100))}%"></div>
+                                </div>
+                            `;
+                            
+                            progressContent.appendChild(exerciseProgress);
+                        }
+                    }
+                    
+                    if (progressContent.children.length === 0) {
+                        progressContent.innerHTML = '<div class="empty-history">Not enough data to show progress yet.</div>';
+                    }
+                    
+                    // Load statistics
+                    loadStatistics();
+                }
+                
+                // Load weight progress
+                loadWeightProgress();
+                
+                progressModal.style.display = 'flex';
+            });
+            
+            // Load statistics
+            function loadStatistics() {
+                const statsContent = document.getElementById('stats-content');
+                const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                
+                if (savedWorkouts.length === 0) {
+                    statsContent.innerHTML = '<div class="empty-history">No workouts saved yet.</div>';
+                    return;
+                }
+                
+                let totalWorkouts = savedWorkouts.length;
+                let totalExercises = 0;
+                let totalSets = 0;
+                let totalVolume = 0;
+                let workoutTypes = {};
+                
+                savedWorkouts.forEach(workout => {
+                    // Count workout types
+                    workoutTypes[workout.type] = (workoutTypes[workout.type] || 0) + 1;
+                    
+                    workout.exercises.forEach(exercise => {
+                        totalExercises++;
+                        
+                        exercise.sets.forEach(set => {
+                            if (set.reps && set.weight) {
+                                totalSets++;
+                                totalVolume += parseFloat(set.reps) * parseFloat(set.weight);
+                            }
+                        });
+                    });
+                });
+                
+                // Calculate averages
+                const avgExercisesPerWorkout = (totalExercises / totalWorkouts).toFixed(1);
+                const avgSetsPerWorkout = (totalSets / totalWorkouts).toFixed(1);
+                const avgVolumePerWorkout = (totalVolume / totalWorkouts).toFixed(1);
+                
+                statsContent.innerHTML = `
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${totalWorkouts}</div>
+                            <div class="stat-label">Total Workouts</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalExercises}</div>
+                            <div class="stat-label">Total Exercises</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalSets}</div>
+                            <div class="stat-label">Total Sets</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalVolume.toFixed(0)}</div>
+                            <div class="stat-label">Total Volume</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div class="progress-date">Workout Distribution</div>
+                        ${Object.keys(workoutTypes).map(type => `
+                            <div style="margin: 8px 0;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>${type.replace('-', ' & ')}</span>
+                                    <span>${workoutTypes[type]} (${((workoutTypes[type] / totalWorkouts) * 100).toFixed(0)}%)</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${(workoutTypes[type] / totalWorkouts) * 100}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div class="progress-date">Averages Per Workout</div>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">${avgExercisesPerWorkout}</div>
+                                <div class="stat-label">Exercises</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${avgSetsPerWorkout}</div>
+                                <div class="stat-label">Sets</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${avgVolumePerWorkout}</div>
+                                <div class="stat-label">Volume</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Load weight progress
+            function loadWeightProgress() {
+                const weightProgressContent = document.getElementById('weight-progress-content');
+                const weightEntries = JSON.parse(localStorage.getItem('weightEntries') || '[]');
+                
+                if (weightEntries.length === 0) {
+                    weightProgressContent.innerHTML = '<div class="empty-history">No weight entries yet.</div>';
+                    return;
+                }
+                
+                // Sort by date
+                weightEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Calculate weekly averages
+                const weeklyAverages = {};
+                
+                weightEntries.forEach(entry => {
+                    const date = new Date(entry.date);
+                    const week = getWeekNumber(date);
+                    const year = date.getFullYear();
+                    const weekKey = `${year}-W${week}`;
+                    
+                    if (!weeklyAverages[weekKey]) {
+                        weeklyAverages[weekKey] = {
+                            total: 0,
+                            count: 0,
+                            dates: []
+                        };
+                    }
+                    
+                    weeklyAverages[weekKey].total += parseFloat(entry.weight);
+                    weeklyAverages[weekKey].count += 1;
+                    weeklyAverages[weekKey].dates.push(entry.date);
+                });
+                
+                // Calculate averages and prepare for display
+                const weeks = [];
+                for (const weekKey in weeklyAverages) {
+                    const average = weeklyAverages[weekKey].total / weeklyAverages[weekKey].count;
+                    weeks.push({
+                        week: weekKey,
+                        average: average.toFixed(1),
+                        dates: weeklyAverages[weekKey].dates
+                    });
+                }
+                
+                // Sort weeks chronologically
+                weeks.sort((a, b) => a.dates[0] > b.dates[0] ? 1 : -1);
+                
+                let progressHTML = '';
+                
+                if (weeks.length > 1) {
+                    // Calculate overall progress
+                    const firstWeek = weeks[0];
+                    const lastWeek = weeks[weeks.length - 1];
+                    const weightChange = (lastWeek.average - firstWeek.average).toFixed(1);
+                    const changeClass = weightChange < 0 ? 'improvement' : 'decline';
+                    const changeText = weightChange < 0 ? `Lost ${Math.abs(weightChange)}kg` : `Gained ${weightChange}kg`;
+                    
+                    progressHTML += `
+                        <div class="progress-item">
+                            <div class="progress-date"><strong>Overall Progress</strong></div>
+                            <div class="progress-type">
+                                Starting: ${firstWeek.average}kg<br>
+                                Current: ${lastWeek.average}kg
+                            </div>
+                            <div class="comparison">
+                                Progress: <span class="${changeClass}">${changeText}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Add weekly averages
+                weeks.forEach(week => {
+                    progressHTML += `
+                        <div class="progress-item">
+                            <div class="progress-date"><strong>Week ${week.week}</strong></div>
+                            <div class="progress-type">Average: ${week.average}kg</div>
+                        </div>
+                    `;
+                });
+                
+                weightProgressContent.innerHTML = progressHTML || '<div class="empty-history">Not enough data to show progress yet.</div>';
+            }
+            
+            // Helper function to get week number
+            function getWeekNumber(d) {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return weekNo;
+            }
+            
+            // Log weight button
+            document.getElementById('logWeight').addEventListener('click', function() {
+                const weightModal = document.getElementById('weight-modal');
+                const weightList = document.getElementById('weight-list');
+                const weightEntries = JSON.parse(localStorage.getItem('weightEntries') || '[]');
+                
+                // Display existing entries
+                weightList.innerHTML = '';
+                
+                if (weightEntries.length === 0) {
+                    weightList.innerHTML = '<div class="empty-history">No weight entries yet.</div>';
+                } else {
+                    // Sort by date (newest first)
+                    weightEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    weightEntries.forEach(entry => {
+                        const date = new Date(entry.date);
+                        const dateStr = date.toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        
+                        const weightItem = document.createElement('div');
+                        weightItem.className = 'weight-item';
+                        weightItem.innerHTML = `
+                            <div>${dateStr}</div>
+                            <div><strong>${entry.weight}kg</strong></div>
+                        `;
+                        
+                        weightList.appendChild(weightItem);
+                    });
+                }
+                
+                weightModal.style.display = 'flex';
+            });
+            
+            // Save weight button
+            document.getElementById('save-weight').addEventListener('click', function() {
+                const weightInput = document.getElementById('weight-input');
+                const weight = parseFloat(weightInput.value);
+                
+                if (isNaN(weight) || weight <= 0) {
+                    alert('Please enter a valid weight.');
+                    return;
+                }
+                
+                const weightEntries = JSON.parse(localStorage.getItem('weightEntries') || '[]');
+                
+                // Check if we already have an entry for today
+                const today = new Date().toISOString().split('T')[0];
+                const existingEntryIndex = weightEntries.findIndex(entry => entry.date === today);
+                
+                if (existingEntryIndex !== -1) {
+                    // Update existing entry
+                    weightEntries[existingEntryIndex].weight = weight;
+                } else {
+                    // Add new entry
+                    weightEntries.push({
+                        date: today,
+                        weight: weight
+                    });
+                }
+                
+                // Save back to localStorage
+                localStorage.setItem('weightEntries', JSON.stringify(weightEntries));
+                
+                alert('Weight saved successfully!');
+                document.getElementById('weight-modal').style.display = 'none';
+                weightInput.value = '';
+            });
+            
+            // Backup & Restore functionality
+            document.getElementById('open-backup').addEventListener('click', function() {
+                document.getElementById('backup-modal').style.display = 'flex';
+            });
+            
+            document.getElementById('close-backup').addEventListener('click', function() {
+                document.getElementById('backup-modal').style.display = 'none';
+            });
+            
+            document.getElementById('export-data').addEventListener('click', function() {
+                const workouts = localStorage.getItem('workouts') || '[]';
+                const weightEntries = localStorage.getItem('weightEntries') || '[]';
+                const customExercises = localStorage.getItem('customExercises') || '{}';
+                
+                const data = {
+                    workouts: JSON.parse(workouts),
+                    weightEntries: JSON.parse(weightEntries),
+                    customExercises: JSON.parse(customExercises),
+                    exportDate: new Date().toISOString()
+                };
+                
+                const dataStr = JSON.stringify(data, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `workout-data-${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                const status = document.getElementById('backup-status');
+                status.style.display = 'block';
+                status.style.backgroundColor = '#e6f7ff';
+                status.textContent = 'Data exported successfully!';
+                
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            });
+            
+            document.getElementById('import-data').addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            if (data.workouts) localStorage.setItem('workouts', JSON.stringify(data.workouts));
+                            if (data.weightEntries) localStorage.setItem('weightEntries', JSON.stringify(data.weightEntries));
+                            if (data.customExercises) localStorage.setItem('customExercises', JSON.stringify(data.customExercises));
+                            
+                            const status = document.getElementById('backup-status');
+                            status.style.display = 'block';
+                            status.style.backgroundColor = '#e6f7ff';
+                            status.textContent = 'Data imported successfully!';
+                            
+                            setTimeout(() => {
+                                status.style.display = 'none';
+                                document.getElementById('backup-modal').style.display = 'none';
+                            }, 3000);
+                        } catch (error) {
+                            alert('Error importing data: Invalid file format');
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                };
+                
+                input.click();
+            });
+            
+            document.getElementById('clear-data').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                    localStorage.removeItem('workouts');
+                    localStorage.removeItem('weightEntries');
+                    localStorage.removeItem('customExercises');
+                    
+                    const status = document.getElementById('backup-status');
+                    status.style.display = 'block';
+                    status.style.backgroundColor = '#ffe6e6';
+                    status.textContent = 'All data has been cleared.';
+                    
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                        document.getElementById('backup-modal').style.display = 'none';
+                    }, 3000);
+                }
+            });
+            
+            // Close modals
+            document.getElementById('close-history').addEventListener('click', function() {
+                document.getElementById('history-modal').style.display = 'none';
+            });
+            
+            document.getElementById('close-progress').addEventListener('click', function() {
+                document.getElementById('progress-modal').style.display = 'none';
+            });
+            
+            document.getElementById('close-weight').addEventListener('click', function() {
+                document.getElementById('weight-modal').style.display = 'none';
+            });
+            
+            // Tab buttons
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    
+                    // Update tab buttons
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Update tab content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tab}-tab`).classList.add('active');
+                });
+            });
+            
+            // Initialize with some sample data if empty (for demo purposes)
+            function initializeSampleData() {
+                // Check if we have any workouts saved
+                const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                if (savedWorkouts.length === 0) {
+                    // Add sample workout data
+                    const sampleWorkouts = [
+                        {
+                            type: 'biceps-chest',
+                            date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            exercises: [
+                                {
+                                    name: 'Decline Bench Press',
+                                    sets: [
+                                        { reps: '10', weight: '30' },
+                                        { reps: '8', weight: '35' },
+                                        { reps: '6', weight: '40' }
+                                    ],
+                                    expanded: false
+                                },
+                                {
+                                    name: 'Bicep Curls',
+                                    sets: [
+                                        { reps: '12', weight: '15' },
+                                        { reps: '10', weight: '17.5' },
+                                        { reps: '8', weight: '20' }
+                                    ],
+                                    expanded: false
+                                }
+                            ]
+                        },
+                        {
+                            type: 'triceps-shoulders-back',
+                            date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            exercises: [
+                                {
+                                    name: 'Shoulder Press',
+                                    sets: [
+                                        { reps: '12', weight: '20' },
+                                        { reps: '10', weight: '25' },
+                                        { reps: '8', weight: '30' }
+                                    ],
+                                    expanded: false
+                                },
+                                {
+                                    name: 'Tricep Extensions',
+                                    sets: [
+                                        { reps: '15', weight: '15' },
+                                        { reps: '12', weight: '20' },
+                                        { reps: '10', weight: '25' }
+                                    ],
+                                    expanded: false
+                                }
+                            ]
+                        }
+                    ];
+                    
+                    localStorage.setItem('workouts', JSON.stringify(sampleWorkouts));
+                    
+                    // Add sample weight data
+                    const sampleWeights = [
+                        { date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '82.5' },
+                        { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '82.3' },
+                        { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '82.0' },
+                        { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '81.8' },
+                        { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '81.5' },
+                        { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '81.2' },
+                        { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], weight: '81.0' }
+                    ];
+                    
+                    localStorage.setItem('weightEntries', JSON.stringify(sampleWeights));
+                    
+                    // Add custom exercises
+                    const customExercises = {
+                        'biceps-chest': ['Decline Bench Press', 'Bicep Curls'],
+                        'triceps-shoulders-back': ['Shoulder Press', 'Tricep Extensions']
+                    };
+                    localStorage.setItem('customExercises', JSON.stringify(customExercises));
+                }
+            }
+            
+            // Initialize sample data for demo
+            initializeSampleData();
+        });
+    </script>
+</body>
+</html>
