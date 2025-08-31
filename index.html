@@ -872,7 +872,62 @@
                                 { reps: '', weight: '' }
                             ],
                             expanded: false
+                        },
+						 {
+                            name: 'Hammer Curl',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+						 {
+                            name: '21 Reps (3x7)',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+						 {
+                            name: 'Lat Pulldown - small grip',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+						 {
+                            name: 'Face Pull',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+						 {
+                            name: 'Cable Row Seated',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+						 {
+                            name: 'Dumbell Waiter Curl',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
                         }
+						
                     ];
                 } else if (type === 'chest-triceps') {
                     return [
@@ -886,7 +941,52 @@
                             expanded: false
                         },
                         {
-                            name: 'Tricep Extensions',
+                            name: 'Tricep Bar Pulldown',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Overhead Cable Tricep',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Tricep Rope Pulldown',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Skull Crusher',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Dip Chin 320',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Tricep Single L/R',
                             sets: [
                                 { reps: '', weight: '' },
                                 { reps: '', weight: '' },
@@ -928,7 +1028,7 @@
                 } else if (type === 'abs') {
                     return [
                         {
-                            name: 'Crunches',
+                            name: 'Rotary Torso Mach.',
                             sets: [
                                 { reps: '', weight: '' },
                                 { reps: '', weight: '' },
@@ -937,7 +1037,7 @@
                             expanded: false
                         },
                         {
-                            name: 'Plank',
+                            name: 'An-X machine',
                             sets: [
                                 { reps: '', weight: '' },
                                 { reps: '', weight: '' },
@@ -946,7 +1046,25 @@
                             expanded: false
                         },
                         {
-                            name: 'Russian Twists',
+                            name: 'Decline Bench Abs',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Lying Leg Raise',
+                            sets: [
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' },
+                                { reps: '', weight: '' }
+                            ],
+                            expanded: false
+                        },
+                        {
+                            name: 'Hanging Leg Raise',
                             sets: [
                                 { reps: '', weight: '' },
                                 { reps: '', weight: '' },
@@ -1113,23 +1231,23 @@
             // Workout type selector
             document.querySelectorAll('.workout-btn').forEach(button => {
                 button.addEventListener('click', function() {
-                    // Save current workout data to temporary storage
-                    temporaryWorkouts[workoutData.type] = JSON.parse(JSON.stringify(workoutData));
-                    
-                    // Update UI
                     document.querySelectorAll('.workout-btn').forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Load new workout type
-                    const newType = this.dataset.workout;
-                    workoutData = {
-                        type: newType,
-                        date: now.toISOString().split('T')[0],
-                        exercises: temporaryWorkouts[newType] ? temporaryWorkouts[newType].exercises : getExercisesForType(newType)
-                    };
+                    // Save current workout data to temporary storage
+                    temporaryWorkouts[workoutData.type] = JSON.parse(JSON.stringify(workoutData));
                     
-                    // If no temporary data exists for this type, initialize it
-                    if (!temporaryWorkouts[newType]) {
+                    // Change to new workout type
+                    const newType = this.dataset.workout;
+                    workoutData.type = newType;
+                    
+                    // Load exercises for this type from temporary storage if available
+                    if (temporaryWorkouts[newType] && temporaryWorkouts[newType].exercises.length > 0) {
+                        workoutData.exercises = temporaryWorkouts[newType].exercises;
+                    } else {
+                        // Load exercises for this type (with custom names if available)
+                        workoutData.exercises = getExercisesForType(newType);
+                        // Update temporary storage
                         temporaryWorkouts[newType] = JSON.parse(JSON.stringify(workoutData));
                     }
                     
@@ -1139,16 +1257,12 @@
             
             // Add exercise button
             document.getElementById('addExercise').addEventListener('click', function() {
-                const newExerciseName = prompt('Enter the name of the new exercise:');
-                if (newExerciseName) {
+                const exerciseName = prompt('Enter exercise name:');
+                if (exerciseName) {
                     workoutData.exercises.push({
-                        name: newExerciseName,
-                        sets: [
-                            { reps: '', weight: '' },
-                            { reps: '', weight: '' },
-                            { reps: '', weight: '' }
-                        ],
-                        expanded: true
+                        name: exerciseName,
+                        sets: [{ reps: '', weight: '' }],
+                        expanded: true // New exercises start expanded
                     });
                     
                     // Save this as a custom exercise for this workout type
@@ -1156,7 +1270,7 @@
                     if (!customExercises[workoutData.type]) {
                         customExercises[workoutData.type] = [];
                     }
-                    customExercises[workoutData.type].push(newExerciseName);
+                    customExercises[workoutData.type].push(exerciseName);
                     saveCustomExercises(customExercises);
                     
                     // Update temporary storage
@@ -1170,15 +1284,13 @@
             document.getElementById('saveWorkout').addEventListener('click', function() {
                 // Validate that at least one exercise has data
                 let hasData = false;
-                for (const exercise of workoutData.exercises) {
-                    for (const set of exercise.sets) {
+                workoutData.exercises.forEach(exercise => {
+                    exercise.sets.forEach(set => {
                         if (set.reps && set.weight) {
                             hasData = true;
-                            break;
                         }
-                    }
-                    if (hasData) break;
-                }
+                    });
+                });
                 
                 if (!hasData) {
                     alert('Please enter at least one set with reps and weight before saving.');
@@ -1194,13 +1306,12 @@
                 // Add to saved workouts
                 savedWorkouts.push(JSON.parse(JSON.stringify(workoutData)));
                 
-                // Save to localStorage
+                // Save back to localStorage
                 localStorage.setItem('workouts', JSON.stringify(savedWorkouts));
                 
-                // Show success message
                 alert('Workout saved successfully!');
                 
-                // Clear the current workout (but keep the structure)
+                // Reset the form but keep the temporary data
                 workoutData.exercises.forEach(exercise => {
                     exercise.sets.forEach(set => {
                         set.reps = '';
@@ -1211,7 +1322,6 @@
                 // Update temporary storage
                 temporaryWorkouts[workoutData.type] = JSON.parse(JSON.stringify(workoutData));
                 
-                // Re-render
                 renderWorkout();
             });
             
@@ -1224,18 +1334,23 @@
                 const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
                 
                 if (savedWorkouts.length === 0) {
-                    historyContent.innerHTML = '<div class="empty-history">No workout history yet.</div>';
+                    historyContent.innerHTML = '<div class="empty-history">No workout history yet. Save a workout to see it here.</div>';
                 } else {
-                    // Sort by date (newest first)
+                    // Sort by date, newest first
                     savedWorkouts.sort((a, b) => new Date(b.date) - new Date(a.date));
                     
                     historyContent.innerHTML = '';
                     
                     savedWorkouts.forEach(workout => {
-                        const historyItem = document.createElement('div');
-                        historyItem.className = 'history-item';
+                        const workoutDate = new Date(workout.date);
+                        const formattedDate = workoutDate.toLocaleDateString('en-US', { 
+                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                        });
                         
-                        let exerciseHTML = '';
+                        const workoutEl = document.createElement('div');
+                        workoutEl.className = 'history-item';
+                        
+                        let exercisesHTML = '';
                         workout.exercises.forEach(exercise => {
                             let setsHTML = '';
                             exercise.sets.forEach((set, index) => {
@@ -1245,7 +1360,7 @@
                             });
                             
                             if (setsHTML) {
-                                exerciseHTML += `
+                                exercisesHTML += `
                                     <div class="history-exercise">
                                         <strong>${exercise.name}</strong>
                                         <div class="history-details">${setsHTML}</div>
@@ -1254,22 +1369,17 @@
                             }
                         });
                         
-                        historyItem.innerHTML = `
-                            <div class="history-date">${new Date(workout.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        workoutEl.innerHTML = `
+                            <div class="history-date">${formattedDate}</div>
                             <div class="history-type">${workout.type.replace(/-/g, ' ').toUpperCase()}</div>
-                            ${exerciseHTML}
+                            ${exercisesHTML}
                         `;
                         
-                        historyContent.appendChild(historyItem);
+                        historyContent.appendChild(workoutEl);
                     });
                 }
                 
                 historyModal.style.display = 'flex';
-            });
-            
-            // Close history modal
-            document.getElementById('close-history').addEventListener('click', function() {
-                document.getElementById('history-modal').style.display = 'none';
             });
             
             // View progress button
@@ -1277,7 +1387,7 @@
                 const progressModal = document.getElementById('progress-modal');
                 progressModal.style.display = 'flex';
                 
-                // Switch to exercises tab by default
+                // Show exercises tab by default
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                 document.querySelector('[data-tab="exercises"]').classList.add('active');
@@ -1287,159 +1397,162 @@
                 loadProgressData();
             });
             
-            // Close progress modal
-            document.getElementById('close-progress').addEventListener('click', function() {
-                document.getElementById('progress-modal').style.display = 'none';
-            });
-            
-            // Tab switching in progress modal
-            document.querySelectorAll('.tab-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-                    
-                    // Update UI
-                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                    this.classList.add('active');
-                    document.getElementById(`${tab}-tab`).classList.add('active');
-                    
-                    // Load data for this tab if needed
-                    if (tab === 'weight') {
-                        loadWeightProgress();
-                    } else if (tab === 'monthly') {
-                        loadMonthlyProgress();
-                    } else if (tab === 'stats') {
-                        loadStats();
-                    }
-                });
-            });
-            
-            // Load progress data for exercises
+            // Load progress data
             function loadProgressData() {
-                const progressContent = document.getElementById('progress-content');
-                const exerciseFilter = document.getElementById('exercise-filter-select');
-                
-                // Get saved workouts
                 const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                
+                if (savedWorkouts.length === 0) {
+                    document.getElementById('progress-content').innerHTML = '<div class="empty-history">No workout data yet. Save a workout to see progress.</div>';
+                    document.getElementById('weight-progress-content').innerHTML = '<div class="empty-history">No weight data yet.</div>';
+                    document.getElementById('monthly-content').innerHTML = '<div class="empty-history">No monthly data yet.</div>';
+                    document.getElementById('stats-content').innerHTML = '<div class="empty-history">No statistics data yet.</div>';
+                    return;
+                }
+                
+                // Populate exercise filter dropdown
+                const exerciseFilter = document.getElementById('exercise-filter-select');
+                exerciseFilter.innerHTML = '<option value="all" selected>All Exercises</option>';
+                
+                // Get all unique exercise names
+                const allExercises = new Set();
+                savedWorkouts.forEach(workout => {
+                    workout.exercises.forEach(exercise => {
+                        allExercises.add(exercise.name);
+                    });
+                });
+                
+                allExercises.forEach(exercise => {
+                    const option = document.createElement('option');
+                    option.value = exercise;
+                    option.textContent = exercise;
+                    exerciseFilter.appendChild(option);
+                });
+                
+                // Load exercise progress
+                loadExerciseProgress('all');
+                
+                // Load weight progress
+                loadWeightProgress();
+                
+                // Load monthly progress
+                loadMonthlyProgress();
+                
+                // Load statistics
+                loadStatistics();
+            }
+            
+            // Load exercise progress
+            function loadExerciseProgress(exerciseFilter) {
+                const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                const progressContent = document.getElementById('progress-content');
                 
                 if (savedWorkouts.length === 0) {
                     progressContent.innerHTML = '<div class="empty-history">No workout data yet.</div>';
                     return;
                 }
                 
-                // Group by exercise
+                // Group workouts by exercise
                 const exerciseData = {};
-                const exerciseNames = new Set();
                 
                 savedWorkouts.forEach(workout => {
                     workout.exercises.forEach(exercise => {
+                        // Skip if we're filtering and this exercise doesn't match
+                        if (exerciseFilter !== 'all' && exercise.name !== exerciseFilter) {
+                            return;
+                        }
+                        
                         if (!exerciseData[exercise.name]) {
                             exerciseData[exercise.name] = [];
                         }
                         
-                        // Calculate volume for each set and total
-                        let totalVolume = 0;
+                        // Calculate best set and total volume for this exercise in this workout
                         let bestSetVolume = 0;
+                        let totalVolume = 0;
                         
-                        const setsWithData = exercise.sets.filter(set => set.reps && set.weight);
-                        
-                        setsWithData.forEach(set => {
-                            const volume = parseInt(set.reps) * parseInt(set.weight);
-                            totalVolume += volume;
-                            if (volume > bestSetVolume) {
-                                bestSetVolume = volume;
+                        exercise.sets.forEach(set => {
+                            if (set.reps && set.weight) {
+                                const reps = parseInt(set.reps);
+                                const weight = parseFloat(set.weight);
+                                const volume = reps * weight;
+                                
+                                totalVolume += volume;
+                                
+                                if (volume > bestSetVolume) {
+                                    bestSetVolume = volume;
+                                }
                             }
                         });
                         
-                        if (setsWithData.length > 0) {
+                        if (totalVolume > 0) {
                             exerciseData[exercise.name].push({
                                 date: workout.date,
-                                type: workout.type,
-                                totalVolume: totalVolume,
                                 bestSetVolume: bestSetVolume,
-                                sets: exercise.sets
+                                totalVolume: totalVolume
                             });
-                            
-                            exerciseNames.add(exercise.name);
                         }
                     });
                 });
                 
-                // Update exercise filter dropdown
-                exerciseFilter.innerHTML = '<option value="all" selected>All Exercises</option>';
-                exerciseNames.forEach(name => {
-                    exerciseFilter.innerHTML += `<option value="${name}">${name}</option>`;
-                });
-                
-                // Filter change handler
-                exerciseFilter.onchange = function() {
-                    renderExerciseProgress(exerciseData, this.value);
-                };
-                
-                // Initial render
-                renderExerciseProgress(exerciseData, 'all');
-            }
-            
-            // Render exercise progress
-            function renderExerciseProgress(exerciseData, filter) {
-                const progressContent = document.getElementById('progress-content');
+                // Generate HTML for each exercise
                 progressContent.innerHTML = '';
                 
                 Object.keys(exerciseData).forEach(exerciseName => {
-                    if (filter !== 'all' && exerciseName !== filter) return;
-                    
-                    const workouts = exerciseData[exerciseName];
-                    if (workouts.length < 2) return; // Need at least 2 workouts to show progress
+                    const data = exerciseData[exerciseName];
                     
                     // Sort by date
-                    workouts.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    data.sort((a, b) => new Date(a.date) - new Date(b.date));
                     
-                    const firstWorkout = workouts[0];
-                    const lastWorkout = workouts[workouts.length - 1];
+                    if (data.length < 2) {
+                        // Not enough data to show progress
+                        const exerciseEl = document.createElement('div');
+                        exerciseEl.className = 'progress-item';
+                        exerciseEl.innerHTML = `
+                            <div class="progress-date">${exerciseName}</div>
+                            <div>Not enough data to show progress (need at least 2 workouts)</div>
+                        `;
+                        progressContent.appendChild(exerciseEl);
+                        return;
+                    }
                     
-                    const bestSetProgress = Math.round(((lastWorkout.bestSetVolume - firstWorkout.bestSetVolume) / firstWorkout.bestSetVolume) * 100);
-                    const totalVolumeProgress = Math.round(((lastWorkout.totalVolume - firstWorkout.totalVolume) / firstWorkout.totalVolume) * 100);
+                    const first = data[0];
+                    const latest = data[data.length - 1];
                     
-                    const progressItem = document.createElement('div');
-                    progressItem.className = 'progress-item';
+                    const bestSetChange = ((latest.bestSetVolume - first.bestSetVolume) / first.bestSetVolume * 100).toFixed(1);
+                    const totalVolumeChange = ((latest.totalVolume - first.totalVolume) / first.totalVolume * 100).toFixed(1);
                     
-                    progressItem.innerHTML = `
+                    const exerciseEl = document.createElement('div');
+                    exerciseEl.className = 'progress-item';
+                    
+                    exerciseEl.innerHTML = `
                         <div class="progress-date">${exerciseName}</div>
-                        <div class="progress-type">From ${new Date(firstWorkout.date).toLocaleDateString()} to ${new Date(lastWorkout.date).toLocaleDateString()}</div>
-                        <div class="progress-exercise">
-                            <div>Best Set: ${firstWorkout.bestSetVolume} → ${lastWorkout.bestSetVolume} 
-                                <span class="${bestSetProgress >= 0 ? 'improvement' : 'decline'}">${bestSetProgress >= 0 ? '+' : ''}${bestSetProgress}%</span>
+                        <div class="progress-chart">
+                            <div>Best Set: ${first.bestSetVolume}kg → ${latest.bestSetVolume}kg 
+                                <span class="${bestSetChange >= 0 ? 'improvement' : 'decline'}">${bestSetChange >= 0 ? '+' : ''}${bestSetChange}%</span>
                             </div>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${Math.min(100, Math.abs(bestSetProgress) + 20)}%; ${bestSetProgress < 0 ? 'background: #ff3b30;' : ''}"></div>
+                                <div class="progress-fill" style="width: ${Math.min(Math.abs(bestSetChange) * 2, 100)}%"></div>
                             </div>
                             
-                            <div>Total Volume: ${firstWorkout.totalVolume} → ${lastWorkout.totalVolume} 
-                                <span class="${totalVolumeProgress >= 0 ? 'improvement' : 'decline'}">${totalVolumeProgress >= 0 ? '+' : ''}${totalVolumeProgress}%</span>
+                            <div>Total Volume: ${first.totalVolume}kg → ${latest.totalVolume}kg 
+                                <span class="${totalVolumeChange >= 0 ? 'improvement' : 'decline'}">${totalVolumeChange >= 0 ? '+' : ''}${totalVolumeChange}%</span>
                             </div>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${Math.min(100, Math.abs(totalVolumeProgress) + 20)}%; ${totalVolumeProgress < 0 ? 'background: #ff3b30;' : ''}"></div>
+                                <div class="progress-fill" style="width: ${Math.min(Math.abs(totalVolumeChange) * 2, 100)}%"></div>
                             </div>
                         </div>
                     `;
                     
-                    progressContent.appendChild(progressItem);
+                    progressContent.appendChild(exerciseEl);
                 });
-                
-                if (progressContent.children.length === 0) {
-                    progressContent.innerHTML = '<div class="empty-history">Not enough data to show progress.</div>';
-                }
             }
             
             // Load weight progress
             function loadWeightProgress() {
+                const weightData = JSON.parse(localStorage.getItem('weightData') || '[]');
                 const weightContent = document.getElementById('weight-progress-content');
                 
-                // Get saved weight data
-                const weightData = JSON.parse(localStorage.getItem('weightData') || '[]');
-                
                 if (weightData.length === 0) {
-                    weightContent.innerHTML = '<div class="empty-history">No weight data yet.</div>';
+                    weightContent.innerHTML = '<div class="empty-history">No weight data yet. Use "Log Today\'s Weight" to track your weight.</div>';
                     return;
                 }
                 
@@ -1448,50 +1561,60 @@
                 
                 weightContent.innerHTML = '';
                 
-                // Show progress if we have at least 2 entries
-                if (weightData.length >= 2) {
-                    const firstEntry = weightData[0];
-                    const lastEntry = weightData[weightData.length - 1];
-                    
-                    const weightChange = (lastEntry.weight - firstEntry.weight).toFixed(1);
-                    const weightChangePercent = ((weightChange / firstEntry.weight) * 100).toFixed(1);
-                    
-                    weightContent.innerHTML += `
-                        <div class="progress-item">
-                            <div class="progress-date">Weight Progress</div>
-                            <div class="progress-type">From ${new Date(firstEntry.date).toLocaleDateString()} to ${new Date(lastEntry.date).toLocaleDateString()}</div>
-                            <div class="progress-exercise">
-                                <div>${firstEntry.weight}kg → ${lastEntry.weight}kg 
-                                    <span class="${weightChange <= 0 ? 'improvement' : 'decline'}">${weightChange > 0 ? '+' : ''}${weightChange}kg (${weightChange > 0 ? '+' : ''}${weightChangePercent}%)</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${Math.min(100, Math.abs(weightChangePercent) + 20)}%; ${weightChange > 0 ? 'background: #ff3b30;' : ''}"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                if (weightData.length < 2) {
+                    weightContent.innerHTML = '<div class="empty-history">Not enough weight data to show progress (need at least 2 entries)</div>';
+                    return;
                 }
                 
-                // Show all entries
+                const first = weightData[0];
+                const latest = weightData[weightData.length - 1];
+                
+                const weightChange = (latest.weight - first.weight).toFixed(1);
+                const weightChangePercent = ((latest.weight - first.weight) / first.weight * 100).toFixed(1);
+                
+                weightContent.innerHTML = `
+                    <div class="progress-item">
+                        <div class="progress-date">Weight Progress</div>
+                        <div class="progress-chart">
+                            <div>Starting Weight: ${first.weight}kg</div>
+                            <div>Current Weight: ${latest.weight}kg</div>
+                            <div>Change: ${weightChange >= 0 ? '+' : ''}${weightChange}kg 
+                                <span class="${weightChange < 0 ? 'improvement' : 'decline'}">${weightChangePercent >= 0 ? '+' : ''}${weightChangePercent}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${Math.min(Math.abs(weightChangePercent) * 2, 100)}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Show all weight entries
+                const weightList = document.createElement('div');
+                weightList.className = 'weight-list';
+                
                 weightData.forEach(entry => {
-                    const weightItem = document.createElement('div');
-                    weightItem.className = 'progress-item';
+                    const entryDate = new Date(entry.date);
+                    const formattedDate = entryDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', month: 'short', day: 'numeric' 
+                    });
                     
-                    weightItem.innerHTML = `
-                        <div class="progress-date">${new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                        <div class="progress-type">Weight: ${entry.weight}kg</div>
+                    const entryEl = document.createElement('div');
+                    entryEl.className = 'weight-item';
+                    entryEl.innerHTML = `
+                        <div>${formattedDate}</div>
+                        <div>${entry.weight}kg</div>
                     `;
                     
-                    weightContent.appendChild(weightItem);
+                    weightList.appendChild(entryEl);
                 });
+                
+                weightContent.appendChild(weightList);
             }
             
             // Load monthly progress
             function loadMonthlyProgress() {
-                const monthlyContent = document.getElementById('monthly-content');
-                
-                // Get saved workouts
                 const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                const monthlyContent = document.getElementById('monthly-content');
                 
                 if (savedWorkouts.length === 0) {
                     monthlyContent.innerHTML = '<div class="empty-history">No workout data yet.</div>';
@@ -1518,64 +1641,70 @@
                     workout.exercises.forEach(exercise => {
                         exercise.sets.forEach(set => {
                             if (set.reps && set.weight) {
-                                monthlyData[monthYear].totalVolume += parseInt(set.reps) * parseInt(set.weight);
-                                monthlyData[monthYear].exercises += 1;
+                                const reps = parseInt(set.reps);
+                                const weight = parseFloat(set.weight);
+                                monthlyData[monthYear].totalVolume += reps * weight;
                             }
                         });
                     });
+                    
+                    monthlyData[monthYear].exercises += workout.exercises.length;
                 });
                 
+                // Generate HTML
                 monthlyContent.innerHTML = '';
                 
                 Object.keys(monthlyData).sort().reverse().forEach(month => {
                     const data = monthlyData[month];
-                    const monthName = new Date(`${month}-01`).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                    const monthName = new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
                     
-                    const monthlyItem = document.createElement('div');
-                    monthlyItem.className = 'progress-item';
+                    const monthEl = document.createElement('div');
+                    monthEl.className = 'progress-item';
                     
-                    monthlyItem.innerHTML = `
+                    monthEl.innerHTML = `
                         <div class="progress-date">${monthName}</div>
-                        <div class="progress-type">
-                            <div>Workouts: ${data.workouts}</div>
-                            <div>Exercises: ${data.exercises}</div>
-                            <div>Total Volume: ${data.totalVolume}</div>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">${data.workouts}</div>
+                                <div class="stat-label">Workouts</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${Math.round(data.totalVolume)}</div>
+                                <div class="stat-label">Total Volume</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${data.exercises}</div>
+                                <div class="stat-label">Exercises</div>
+                            </div>
                         </div>
                     `;
                     
-                    monthlyContent.appendChild(monthlyItem);
+                    monthlyContent.appendChild(monthEl);
                 });
             }
             
             // Load statistics
-            function loadStats() {
-                const statsContent = document.getElementById('stats-content');
-                
-                // Get saved workouts
+            function loadStatistics() {
                 const savedWorkouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+                const statsContent = document.getElementById('stats-content');
                 
                 if (savedWorkouts.length === 0) {
                     statsContent.innerHTML = '<div class="empty-history">No workout data yet.</div>';
                     return;
                 }
                 
+                // Calculate statistics
                 let totalWorkouts = savedWorkouts.length;
                 let totalExercises = 0;
                 let totalSets = 0;
                 let totalVolume = 0;
-                let firstWorkoutDate = new Date();
                 let favoriteExercise = {};
                 
                 savedWorkouts.forEach(workout => {
-                    const workoutDate = new Date(workout.date);
-                    if (workoutDate < firstWorkoutDate) {
-                        firstWorkoutDate = workoutDate;
-                    }
-                    
                     totalExercises += workout.exercises.length;
                     
                     workout.exercises.forEach(exercise => {
-                        // Count favorite exercise
+                        // Count exercise frequency
                         if (!favoriteExercise[exercise.name]) {
                             favoriteExercise[exercise.name] = 0;
                         }
@@ -1584,7 +1713,7 @@
                         exercise.sets.forEach(set => {
                             if (set.reps && set.weight) {
                                 totalSets += 1;
-                                totalVolume += parseInt(set.reps) * parseInt(set.weight);
+                                totalVolume += parseInt(set.reps) * parseFloat(set.weight);
                             }
                         });
                     });
@@ -1594,82 +1723,106 @@
                 let mostFrequentExercise = 'None';
                 let maxCount = 0;
                 
-                for (const exercise in favoriteExercise) {
+                Object.keys(favoriteExercise).forEach(exercise => {
                     if (favoriteExercise[exercise] > maxCount) {
                         mostFrequentExercise = exercise;
                         maxCount = favoriteExercise[exercise];
                     }
-                }
+                });
                 
-                // Calculate days since first workout
-                const today = new Date();
-                const daysSinceFirst = Math.floor((today - firstWorkoutDate) / (1000 * 60 * 60 * 24));
-                
+                // Generate HTML
                 statsContent.innerHTML = `
                     <div class="stat-grid">
                         <div class="stat-item">
                             <div class="stat-value">${totalWorkouts}</div>
-                            <div class="stat-label">Workouts</div>
+                            <div class="stat-label">Total Workouts</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value">${totalExercises}</div>
-                            <div class="stat-label">Exercises</div>
+                            <div class="stat-label">Total Exercises</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value">${totalSets}</div>
-                            <div class="stat-label">Sets</div>
+                            <div class="stat-label">Total Sets</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${totalVolume}</div>
+                            <div class="stat-value">${Math.round(totalVolume)}</div>
                             <div class="stat-label">Total Volume</div>
                         </div>
                     </div>
                     <div class="progress-item">
-                        <div class="progress-date">Additional Stats</div>
-                        <div class="progress-type">
-                            <div>Tracking since: ${firstWorkoutDate.toLocaleDateString()}</div>
-                            <div>Days tracking: ${daysSinceFirst}</div>
-                            <div>Favorite exercise: ${mostFrequentExercise}</div>
-                            <div>Average per workout: ${Math.round(totalVolume / totalWorkouts)} volume</div>
-                        </div>
+                        <div class="progress-date">Favorite Exercise</div>
+                        <div>${mostFrequentExercise} (${maxCount} times)</div>
                     </div>
                 `;
             }
             
+            // Exercise filter change
+            document.getElementById('exercise-filter-select').addEventListener('change', function() {
+                loadExerciseProgress(this.value);
+            });
+            
+            // Tab buttons
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    
+                    // Update active tab button
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update active tab content
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    document.getElementById(`${tab}-tab`).classList.add('active');
+                    
+                    // Reload data if needed
+                    if (tab === 'exercises') {
+                        loadExerciseProgress(document.getElementById('exercise-filter-select').value);
+                    } else if (tab === 'weight') {
+                        loadWeightProgress();
+                    } else if (tab === 'monthly') {
+                        loadMonthlyProgress();
+                    } else if (tab === 'stats') {
+                        loadStatistics();
+                    }
+                });
+            });
+            
             // Log weight button
             document.getElementById('logWeight').addEventListener('click', function() {
                 const weightModal = document.getElementById('weight-modal');
-                weightModal.style.display = 'flex';
+                const weightList = document.getElementById('weight-list');
                 
                 // Load weight data
                 const weightData = JSON.parse(localStorage.getItem('weightData') || '[]');
-                const weightList = document.getElementById('weight-list');
                 
+                // Sort by date, newest first
+                weightData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Display weight entries
                 weightList.innerHTML = '';
                 
                 if (weightData.length === 0) {
                     weightList.innerHTML = '<div class="empty-history">No weight entries yet.</div>';
                 } else {
-                    // Sort by date (newest first)
-                    weightData.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
                     weightData.forEach(entry => {
-                        const weightItem = document.createElement('div');
-                        weightItem.className = 'weight-item';
+                        const entryDate = new Date(entry.date);
+                        const formattedDate = entryDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', month: 'short', day: 'numeric' 
+                        });
                         
-                        weightItem.innerHTML = `
-                            <div>${new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        const entryEl = document.createElement('div');
+                        entryEl.className = 'weight-item';
+                        entryEl.innerHTML = `
+                            <div>${formattedDate}</div>
                             <div>${entry.weight}kg</div>
                         `;
                         
-                        weightList.appendChild(weightItem);
+                        weightList.appendChild(entryEl);
                     });
                 }
-            });
-            
-            // Close weight modal
-            document.getElementById('close-weight').addEventListener('click', function() {
-                document.getElementById('weight-modal').style.display = 'none';
+                
+                weightModal.style.display = 'flex';
             });
             
             // Save weight button
@@ -1700,158 +1853,175 @@
                     });
                 }
                 
-                // Save to localStorage
+                // Save back to localStorage
                 localStorage.setItem('weightData', JSON.stringify(weightData));
                 
-                // Show success message
                 alert('Weight saved successfully!');
                 
-                // Clear input
-                weightInput.value = '';
-                
-                // Reload weight list
-                const weightList = document.getElementById('weight-list');
-                weightList.innerHTML = '';
-                
-                if (weightData.length === 0) {
-                    weightList.innerHTML = '<div class="empty-history">No weight entries yet.</div>';
-                } else {
-                    // Sort by date (newest first)
-                    weightData.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
-                    weightData.forEach(entry => {
-                        const weightItem = document.createElement('div');
-                        weightItem.className = 'weight-item';
-                        
-                        weightItem.innerHTML = `
-                            <div>${new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                            <div>${entry.weight}kg</div>
-                        `;
-                        
-                        weightList.appendChild(weightItem);
-                    });
-                }
+                // Close the modal
+                document.getElementById('close-weight').click();
             });
             
-            // Backup & Restore functionality
+            // Show info button
+            document.getElementById('showInfo').addEventListener('click', function() {
+                document.getElementById('info-modal').style.display = 'flex';
+            });
+            
+            // Backup & Restore button
             document.getElementById('open-backup').addEventListener('click', function() {
                 document.getElementById('backup-modal').style.display = 'flex';
             });
             
-            document.getElementById('close-backup').addEventListener('click', function() {
-                document.getElementById('backup-modal').style.display = 'none';
-                document.getElementById('backup-status').style.display = 'none';
-            });
-            
+            // Export data button
             document.getElementById('export-data').addEventListener('click', function() {
-                // Get all data from localStorage
-                const data = {
-                    workouts: JSON.parse(localStorage.getItem('workouts') || '[]'),
-                    weightData: JSON.parse(localStorage.getItem('weightData') || '[]'),
-                    customExercises: JSON.parse(localStorage.getItem('customExercises') || '{}')
+                const workouts = localStorage.getItem('workouts') || '[]';
+                const weightData = localStorage.getItem('weightData') || '[]';
+                const customExercises = localStorage.getItem('customExercises') || '{}';
+                
+                const allData = {
+                    workouts: JSON.parse(workouts),
+                    weightData: JSON.parse(weightData),
+                    customExercises: JSON.parse(customExercises),
+                    exportDate: new Date().toISOString()
                 };
                 
-                // Create a blob and download link
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
+                const dataStr = JSON.stringify(allData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
                 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `workout-data-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const exportFileDefaultName = 'gym-workout-data.json';
                 
-                // Show status message
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
                 const statusEl = document.getElementById('backup-status');
                 statusEl.textContent = 'Data exported successfully!';
-                statusEl.style.backgroundColor = '#d4edda';
-                statusEl.style.color = '#155724';
                 statusEl.style.display = 'block';
+                statusEl.style.background = '#d4edda';
+                statusEl.style.color = '#155724';
+                
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
             });
             
+            // Import data button
             document.getElementById('import-data').addEventListener('click', function() {
-                // Create file input element
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.json';
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
                 
-                fileInput.addEventListener('change', function() {
-                    const file = this.files[0];
-                    if (!file) return;
-                    
+                input.onchange = function(e) {
+                    const file = e.target.files[0];
                     const reader = new FileReader();
+                    
                     reader.onload = function(e) {
                         try {
-                            const data = JSON.parse(e.target.result);
+                            const allData = JSON.parse(e.target.result);
                             
-                            // Validate the data structure
-                            if (data.workouts === undefined || data.weightData === undefined || data.customExercises === undefined) {
-                                throw new Error('Invalid data format');
+                            if (allData.workouts) {
+                                localStorage.setItem('workouts', JSON.stringify(allData.workouts));
                             }
                             
-                            // Import the data
-                            localStorage.setItem('workouts', JSON.stringify(data.workouts));
-                            localStorage.setItem('weightData', JSON.stringify(data.weightData));
-                            localStorage.setItem('customExercises', JSON.stringify(data.customExercises));
+                            if (allData.weightData) {
+                                localStorage.setItem('weightData', JSON.stringify(allData.weightData));
+                            }
                             
-                            // Show status message
+                            if (allData.customExercises) {
+                                localStorage.setItem('customExercises', JSON.stringify(allData.customExercises));
+                            }
+                            
                             const statusEl = document.getElementById('backup-status');
                             statusEl.textContent = 'Data imported successfully!';
-                            statusEl.style.backgroundColor = '#d4edda';
+                            statusEl.style.display = 'block';
+                            statusEl.style.background = '#d4edda';
                             statusEl.style.color = '#155724';
-                            statusEl.style.display = 'block';
                             
-                            // Update the UI if needed
-                            if (workoutData.type in data.customExercises) {
-                                workoutData.exercises = getExercisesForType(workoutData.type);
-                                temporaryWorkouts[workoutData.type] = JSON.parse(JSON.stringify(workoutData));
-                                renderWorkout();
-                            }
+                            setTimeout(() => {
+                                statusEl.style.display = 'none';
+                            }, 3000);
+                            
                         } catch (error) {
-                            // Show error message
-                            const statusEl = document.getElementById('backup-status');
-                            statusEl.textContent = 'Error importing data: Invalid file format';
-                            statusEl.style.backgroundColor = '#f8d7da';
-                            statusEl.style.color = '#721c24';
-                            statusEl.style.display = 'block';
+                            alert('Error importing data: Invalid file format.');
                         }
                     };
                     
                     reader.readAsText(file);
-                });
+                };
                 
-                fileInput.click();
+                input.click();
             });
             
+            // Clear data button
             document.getElementById('clear-data').addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
                     localStorage.removeItem('workouts');
                     localStorage.removeItem('weightData');
                     localStorage.removeItem('customExercises');
                     
-                    // Reset the current workout to default
+                    // Reset current workout
                     workoutData.exercises = getExercisesForType(workoutData.type);
-                    temporaryWorkouts[workoutData.type] = JSON.parse(JSON.stringify(workoutData));
                     renderWorkout();
                     
-                    // Show status message
+                    // Reset temporary storage
+                    temporaryWorkouts = {
+                        'biceps-shoulders-back': { exercises: [] },
+                        'chest-triceps': { exercises: [] },
+                        'legs': { exercises: [] },
+                        'abs': { exercises: [] }
+                    };
+                    
                     const statusEl = document.getElementById('backup-status');
-                    statusEl.textContent = 'All data has been cleared.';
-                    statusEl.style.backgroundColor = '#d4edda';
-                    statusEl.style.color = '#155724';
+                    statusEl.textContent = 'All data cleared successfully!';
                     statusEl.style.display = 'block';
+                    statusEl.style.background = '#d4edda';
+                    statusEl.style.color = '#155724';
+                    
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 3000);
                 }
             });
             
-            // Show info modal
-            document.getElementById('showInfo').addEventListener('click', function() {
-                document.getElementById('info-modal').style.display = 'flex';
+            // Close modal buttons
+            document.getElementById('close-history').addEventListener('click', function() {
+                document.getElementById('history-modal').style.display = 'none';
+            });
+            
+            document.getElementById('close-progress').addEventListener('click', function() {
+                document.getElementById('progress-modal').style.display = 'none';
+            });
+            
+            document.getElementById('close-weight').addEventListener('click', function() {
+                document.getElementById('weight-modal').style.display = 'none';
+            });
+            
+            document.getElementById('close-backup').addEventListener('click', function() {
+                document.getElementById('backup-modal').style.display = 'none';
             });
             
             document.getElementById('close-info').addEventListener('click', function() {
                 document.getElementById('info-modal').style.display = 'none';
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target.id === 'history-modal') {
+                    document.getElementById('history-modal').style.display = 'none';
+                }
+                if (event.target.id === 'progress-modal') {
+                    document.getElementById('progress-modal').style.display = 'none';
+                }
+                if (event.target.id === 'weight-modal') {
+                    document.getElementById('weight-modal').style.display = 'none';
+                }
+                if (event.target.id === 'backup-modal') {
+                    document.getElementById('backup-modal').style.display = 'none';
+                }
+                if (event.target.id === 'info-modal') {
+                    document.getElementById('info-modal').style.display = 'none';
+                }
             });
         });
     </script>
