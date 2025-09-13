@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Workout Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            color: black;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .date {
+            font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+
+        .auth-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 24px;
+            border-radius: 16px;
+            color: black;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            border: none;
+            border-radius: 12px;
+            color: black;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        #error-message {
+            color: #ff3b30;
+            margin-top: 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 430px;
+            color: black;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .settings-section h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .danger-zone {
+            background-color: #fff8f8;
+            border: 1.5px solid #ffcdd2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+
+        .danger-zone button {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+
+        .version-info {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 24px;
+        }
+
+        /* iOS-specific adjustments */
+        @supports (-webkit-touch-callout: none) {
+            input {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            button {
+                padding: 14px;
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
+
+        /* New styles for category grid */
+        .category-grid {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 6px;
+            margin: 16px 0;
+            scrollbar-width: thin;
+            scrollbar-color: #ffd700 #222;
+        }
+
+        .category-btn {
+            background: linear-gradient(135deg, #1a1a1a, #333);
+            color: #ffd700;
+            padding: 7px 4px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            border: 2px solid #ffd700;
+            transition: transform 0.2s;
+            font-size: 0.85em;
+            min-width: 60px;
+            max-width: 70px;
+            white-space: nowrap;
+            flex: 1 1 0;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            color: black;
+        }
+
+        .category-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Add to your existing styles */
+        .category-edit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .category-edit-item input {
+            flex: 1;
+            padding: 8px;
+        }
+
+        .save-category-btn {
+            padding: 8px 16px !important;
+            margin-top: 0 !important;
+            width: auto !important;
+        }
+
+        .exercise-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: none;
+        }
+
+        .exercise-container.active {
+            display: block;
+        }
+
+        .add-exercise-btn {
+            background: linear-gradient(135deg, #ffd700, #ffb700) !important;
+            margin-top: 15px !important;
+        }
+
+        .exercise-item:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            transform: translateX(2px);
+            transition: all 0.2s ease;
+        }
+
+        .exercise-item button:hover {
+            opacity: 0.8;
+            transform: scale(1.1);
+            transition: all 0.2s ease;
+        }
+
+        .exercise-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1a1a1a;  /* Changed from #ffd700 to dark */
+        }
+
+        .set-container {
+            margin-left: 25px;
+            margin-top: 15px;  /* Increased top margin */
+            margin-bottom: 10px;  /* Added bottom margin */
+            display: none;
+        }
+
+        .set-row {
+            display: flex;
+            gap: 15px;  /* Increased gap between inputs */
+            margin-bottom: 12px;  /* Increased margin between rows */
+        }
+
+        .set-input {
+            flex: 1;
+            padding: 12px !important;  /* Increased padding */
+            font-size: 16px !important;  /* Increased font size */
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #333 !important;
+            height: 45px !important;  /* Added explicit height */
+            border-radius: 8px !important;  /* Added rounded corners */
+        }
+
+        .set-input::placeholder {
+            color: #666;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #1a1a1a;  /* Changed from #ffd700 to dark */
+            cursor: pointer;
+            padding: 5px;
+            margin: 0;
+            font-size: 16px;
+            width: 24px !important;
+        }
+
+        .save-workout-btn {
+            width: 100%;
+            padding: 16px !important;
+            font-size: 18px !important;
+            margin: 20px 0 !important;
+            background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+            color: white !important;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .save-workout-btn:hover {
+            opacity: 0.9;
+        }
+
+        .save-workout-btn:active {
+            transform: scale(0.98);
+        }
+
+        .body-weight-container input[type="number"] {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #333;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .history-buttons button {
+            padding: 16px !important;
+            font-size: 16px !important;
+            color: white !important;
+        }
+
+        .history-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        .period-btn {
+            background: linear-gradient(135deg, #ffd700, #ffb700) !important;
+            color: #1a1a1a !important;
+            border: 2px solid #ffd700 !important;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .period-btn.active {
+            background: #1a1a1a !important;
+            color: #ffd700 !important;
+            border: 2px solid #ffd700 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gym Workout Tracker</h1>
+            <div class="date" id="current-date"></div>
+        </div>
+
+        <div class="auth-container" id="auth-forms">
+            <div id="login-form">
+                <h2>Login</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button onclick="login()">Login</button>
+                <button onclick="showRegisterForm()">Switch to Register</button>
+            </div>
+
+            <div id="register-form" style="display: none;">
+                <h2>Register</h2>
+                <div class="form-group">
+                    <label for="register-name">Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <button onclick="register()">Register</button>
+                <button onclick="showLoginForm()">Switch to Login</button>
+            </div>
+
+            <div id="error-message"></div>
+        </div>
+    </div>
+
+    <div class="connection-status" id="connection-status"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMOV6YxILHYVhNXaBS-_ibqfNsIwS8N4k",
+            authDomain: "YOgym-workout-tracker-1b2d7.firebaseapp.com",
+            projectId: "gym-workout-tracker-1b2d7",
+            storageBucket: "gym-workout-tracker-1b2d7.appspot.com",
+            messagingSenderId: "953851185030",
+            appId: "1:953851185030:web:0ab402f999fecb9c268e07"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app();
+        }
+
+        // Add after Firebase initialization and before other code
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Add these global variables
+        let currentWorkouts = [];
+        let currentCategoryFilter = 'all';
+
+        // Verify Firestore connection
+        db.enablePersistence()
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+                } else if (err.code == 'unimplemented') {
+                    console.warn('The current browser does not support persistence.');
+                }
+            });
+
+        // Update date
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+        }
+        updateDate();
+
+        // Authentication functions
+        function showRegisterForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+
+        function showLoginForm() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+        }
+
+        function register() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    return userCredential.user.updateProfile({
+                        displayName: name
+                    });
+                })
+                .then(() => {
+                    showLoginForm();
+                    document.getElementById('error-message').textContent = 'Registration successful! Please login.';
+                })
+                .catch((error) => {
+                    document.getElementById('error-message').textContent = error.message;
+                });
+        }
+
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    document.getElementById('error-message').textContent = error.message;
+                });
+        }
+
+        let exerciseData = {};  // This will store our temporary data
+
+        // Add this function to save temporary data
+        function saveTemporaryData(inputId, value) {
+            exerciseData[inputId] = value;
+            // Save to localStorage as backup
+            localStorage.setItem('exerciseData', JSON.stringify(exerciseData));
+        }
+
+        // Add this function to restore data when page loads
+        function loadSavedData() {
+            const savedData = localStorage.getItem('exerciseData');
+            if (savedData) {
+                exerciseData = JSON.parse(savedData);
+            }
+        }
+
+        // Add this function to clear data on logout
+        function clearExerciseData() {
+            exerciseData = {};
+            localStorage.removeItem('exerciseData');
+        }
+
+        // Update the logout function
+        function logout() {
+            clearExerciseData();  // Clear exercise data
+            firebase.auth().signOut()
+                .then(() => {
+                    console.log('Logged out successfully');
+                    document.getElementById('error-message').textContent = '';
+                    const loginTemplate = document.getElementById('login-template');
+                    document.getElementById('auth-forms').innerHTML = loginTemplate.innerHTML;
+                })
+                .catch((error) => {
+                    console.error('Logout error:', error);
+                    document.getElementById('error-message').textContent = error.message;
+                });
+        }
+
+        // Initialize categories in Firebase
+        const defaultCategories = [
+            { id: 'cat1', name: 'Biceps, Shoulder & Back' },
+            { id: 'cat2', name: 'Chest & Triceps' },
+            { id: 'cat3', name: 'Legs' },
+            { id: 'cat4', name: 'Abs & Core' }
+        ];
+
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            const authForms = document.getElementById('auth-forms');
+            const connectionStatus = document.getElementById('connection-status');
+
+            if (user) {
+                const lastLogin = user.metadata.lastSignInTime;
+                const formattedLastLogin = new Date(lastLogin).toLocaleString();
+                
+                // Replace the logged-in content section in auth.onAuthStateChanged
+                authForms.innerHTML = `
+                    <div class="logged-in-content">
+                        <h2 style="font-size: 1.5em; margin-bottom: 5px;">Welcome back!</h2>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                            ${user.displayName || 'User'}<br>
+                            Last login: ${formattedLastLogin}
+                        </p>
+                        <button onclick="logout()" id="logout-btn">Logout</button>
+                        
+                        <div class="category-grid">
+                            ${defaultCategories.map((cat, idx) => `
+                                <button 
+                                    class="category-btn${idx === 0 ? ' active' : ''}" 
+                                    data-id="${cat.id}" 
+                                    onclick="selectCategory('${cat.id}')"
+                                >${cat.name}</button>
+                            `).join('')}
+                        </div>
+
+                        <div id="exercise-area">
+                            ${defaultCategories.map((cat, idx) => `
+                                <div id="exercise-container-${cat.id}" 
+                                     class="exercise-container${idx === 0 ? ' active' : ''}">
+                                    <div id="exercises-${cat.id}">
+                                        <!-- Exercises will be loaded here -->
+                                    </div>
+                                    <button 
+                                        class="add-exercise-btn" 
+                                        onclick="addExercise('${cat.id}')"
+                                    >+ Add Exercise</button>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <button 
+                            onclick="saveWorkout()" 
+                            class="save-workout-btn"
+                            style="margin-top: 20px; background: linear-gradient(135deg, #4CAF50, #45a049) !important;"
+                        >💾 Save Workout</button>
+
+                        <!-- Add this new element -->
+                        <div class="body-weight-container" style="margin: 20px 0;">
+                            <button 
+                                onclick="showBodyWeightModal()" 
+                                class="body-weight-btn"
+                                style="
+                                    width: 100%;
+                                    padding: 16px;
+                                    background: linear-gradient(135deg, #ffd700, #ffb700) !important;
+                                    border-radius: 12px;
+                                    font-size: 16px;
+                                    color: #1a1a1a;
+                                    font-weight: 600;
+                                "
+                            >⚖️ Body Weight</button>
+                        </div>
+
+                        <div class="history-buttons" style="
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 15px;
+                            margin-bottom: 20px;
+                        ">
+                            <button 
+                                onclick="viewHistory()" 
+                                style="background: linear-gradient(135deg, #2196F3, #1976D2) !important;"
+                            >📋 View History</button>
+                            <button 
+                                onclick="viewProgress()" 
+                                style="background: linear-gradient(135deg, #1565C0, #0D47A1) !important;"
+                            >📈 View Progress</button>
+                        </div>
+
+                        <button onclick="showSettings()" class="settings-btn">⚙️ Settings</button>
+                    </div>
+                `;
+                connectionStatus.textContent = '🟢 Connected';
+                connectionStatus.style.backgroundColor = '#4CAF50';
+
+                // Initialize categories in Firebase if they don't exist
+                initializeCategories();
+
+                // Select first category by default
+                window.selectedCategoryId = defaultCategories[0].id;
+                setTimeout(() => selectCategory(defaultCategories[0].id), 0);
+            } else {
+                authForms.innerHTML = document.getElementById('login-template').innerHTML;
+                connectionStatus.textContent = '🔴 Not Connected';
+                connectionStatus.style.backgroundColor = '#f44336';
+            }
+        });
+
+        async function initializeCategories() {
+            const categoriesRef = db.collection('categories');
+            const snapshot = await categoriesRef.get();
+
+            if (snapshot.empty) {
+                // Initialize default categories
+                defaultCategories.forEach(async (cat) => {
+                    await categoriesRef.doc(cat.id).set({
+                        name: cat.name,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+            }
+        }
+
+        function selectCategory(categoryId) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Hide all exercise containers
+            document.querySelectorAll('.exercise-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            // Add active class to selected button
+            const selectedBtn = document.querySelector(`[data-id="${categoryId}"]`);
+            selectedBtn.classList.add('active');
+
+            // Show selected exercise container
+            const selectedContainer = document.getElementById(`exercise-container-${categoryId}`);
+            selectedContainer.classList.add('active');
+
+            // Store selected category in state
+            window.selectedCategoryId = categoryId;
+
+            // Load exercises for the selected category
+            loadExercises(categoryId);
+        }
+
+        async function showSettings() {
+            document.getElementById('settings-modal').style.display = 'block';
+            await loadCategoryEditor();
+        }
+
+        async function loadCategoryEditor() {
+            const categoryList = document.getElementById('category-edit-list');
+            const categoriesRef = db.collection('categories');
+            const snapshot = await categoriesRef.get();
+            
+            let html = '';
+            snapshot.forEach(doc => {
+                const category = doc.data();
+                html += `
+                    <div class="category-edit-item">
+                        <input 
+                            type="text" 
+                            id="cat-${doc.id}" 
+                            value="${category.name}"
+                            placeholder="Category name"
+                        >
+                        <button 
+                            class="save-category-btn"
+                            onclick="updateCategoryName('${doc.id}')"
+                        >
+                            Save
+                        </button>
+                    </div>
+                `;
+            });
+            
+            categoryList.innerHTML = html;
+        }
+
+        async function updateCategoryName(categoryId) {
+            const input = document.getElementById(`cat-${categoryId}`);
+            const newName = input.value.trim();
+            
+            if (!newName) {
+                alert('Category name cannot be empty');
+                return;
+            }
+            
+            try {
+                await db.collection('categories').doc(categoryId).update({
+                    name: newName,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Update category button text in main view
+                const categoryBtn = document.querySelector(`[data-id="${categoryId}"]`);
+                if (categoryBtn) {
+                    categoryBtn.textContent = newName;
+                }
+                
+                alert('Category name updated successfully!');
+            } catch (error) {
+                console.error('Error updating category:', error);
+                alert('Error updating category name');
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        async function changeName() {
+            const newName = document.getElementById('change-name').value.trim();
+            if (!newName) {
+                alert('Please enter a valid name');
+                return;
+            }
+
+            try {
+                const user = firebase.auth().currentUser;
+                await user.updateProfile({
+                    displayName: newName
+                });
+                alert('Name updated successfully!');
+                closeSettings();
+                // Refresh the welcome message
+                auth.onAuthStateChanged(auth.currentUser);
+            } catch (error) {
+                alert('Error updating name: ' + error.message);
+            }
+        }
+
+        function exportData() {
+            // Placeholder for export functionality
+            alert('Export functionality coming soon!');
+        }
+
+        function importData() {
+            // Placeholder for import functionality
+            alert('Import functionality coming soon!');
+        }
+
+        function resetExercises() {
+            if (confirm('Are you sure you want to reset all exercise data? This cannot be undone!')) {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    alert('Please log in to reset exercise data.');
+                    return;
+                }
+                // Remove all exercise input data for this user (not names)
+                const promises = [];
+
+                // Delete from exerciseInputs
+                promises.push(
+                    db.collection('exerciseInputs').where('userId', '==', user.uid).get()
+                        .then(snapshot => {
+                            const batch = db.batch();
+                            snapshot.forEach(doc => batch.delete(doc.ref));
+                            return batch.commit();
+                        })
+                );
+
+                // Delete from workouts
+                promises.push(
+                    db.collection('workouts').where('userId', '==', user.uid).get()
+                        .then(snapshot => {
+                            const batch = db.batch();
+                            snapshot.forEach(doc => batch.delete(doc.ref));
+                            return batch.commit();
+                        })
+                );
+
+                Promise.all(promises)
+                    .then(() => {
+                        alert('All exercise input and workout data has been reset.');
+                    })
+                    .catch(error => {
+                        alert('Error resetting exercise data: ' + error.message);
+                    });
+            }
+        }
+
+        function resetWeights() {
+            if (confirm('Are you sure you want to reset all weight data? This cannot be undone!')) {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    alert('Please log in to reset weight data.');
+                    return;
+                }
+                // Remove all weight input data for this user
+                db.collection('bodyweights').where('userId', '==', user.uid).get()
+                    .then(snapshot => {
+                        const batch = db.batch();
+                        snapshot.forEach(doc => batch.delete(doc.ref));
+                        return batch.commit();
+                    })
+                    .then(() => {
+                        alert('All weight input data has been reset.');
+                    })
+                    .catch(error => {
+                        alert('Error resetting weight data: ' + error.message);
+                    });
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modalMap = {
+                'settings-modal': closeSettings,
+                'body-weight-modal': closeBodyWeightModal,
+                'weight-history-modal': closeWeightHistory,
+                'weight-progress-modal': closeWeightProgress
+            };
+
+            const modal = event.target;
+            if (modal.classList.contains('modal')) {
+                const closeFunction = modalMap[modal.id];
+                if (closeFunction) {
+                    closeFunction();
+                }
+            }
+        }
+        // Templates
+        const loginTemplate = `
+            <div id="login-form">
+                <h2>Login</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button onclick="login()">Login</button>
+                <button onclick="showRegisterForm()">Switch to Register</button>
+            </div>
+        `;
+
+        document.getElementById('login-template').innerHTML = loginTemplate;
+
+        // Add this function as a placeholder for add exercise
+        function addExercise(categoryId) {
+            // Create unique ID
+            const exerciseId = 'exercise_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Get the exercises container for this category
+            const container = document.getElementById(`exercises-${categoryId}`);
+            
+            // Create input form
+            const inputForm = document.createElement('div');
+            inputForm.style.marginBottom = '15px';
+            inputForm.style.display = 'flex';
+            inputForm.style.gap = '10px';
+            inputForm.innerHTML = `
+                <input 
+                    type="text" 
+                    id="${exerciseId}" 
+                    placeholder="Enter exercise name"
+                    style="flex: 1;"
+                >
+                <button 
+                    onclick="saveExercise('${exerciseId}', '${categoryId}')"
+                    style="width: auto; padding: 10px 20px;"
+                >Save</button>
+                <button 
+                    onclick="cancelAdd('${exerciseId}')"
+                    style="width: auto; padding: 10px 20px; background: #ff4444;"
+                >Cancel</button>
+            `;
+            
+            // Add form before the "Add Exercise" button
+            container.appendChild(inputForm);
+        }
+
+        function saveExercise(exerciseId, categoryId) {
+            const input = document.getElementById(exerciseId);
+            const exerciseName = input.value.trim();
+            
+            if (!exerciseName) {
+                alert('Please enter an exercise name');
+                return;
+            }
+            
+            // Save to Firebase
+            db.collection('exercises').doc(exerciseId).set({
+                name: exerciseName,
+                categoryId: categoryId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: firebase.auth().currentUser.uid // Associate with current user
+            })
+            .then(() => {
+                console.log('Exercise saved successfully');
+                // Remove the input form
+                input.parentElement.remove();
+                // Refresh the exercises list
+                loadExercises(categoryId);
+            })
+            .catch((error) => {
+                console.error('Error saving exercise:', error);
+                alert('Error saving exercise');
+            });
+        }
+
+        function cancelAdd(exerciseId) {
+            // Remove the input form
+            const input = document.getElementById(exerciseId);
+            input.parentElement.remove();
+        }
+
+        function loadExercises(categoryId) {
+            const container = document.getElementById(`exercises-${categoryId}`);
+            const user = firebase.auth().currentUser;
+            
+            if (!user) {
+                console.error('No user logged in');
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff4444;">Please log in again</div>';
+                return;
+            }
+
+            container.innerHTML = '<div style="text-align: center; padding: 20px;">Loading exercises...</div>';
+            
+            db.collection('exercises')
+                .where('categoryId', '==', categoryId)
+                .where('userId', '==', user.uid)
+                .get()
+                .then((snapshot) => {
+                    container.innerHTML = '';
+                    
+                    if (snapshot.empty) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 20px; color: #666;">
+                                No exercises added yet for ${defaultCategories.find(c => c.id === categoryId)?.name || 'this category'}
+                            </div>`;
+                        return;
+                    }
+
+                    snapshot.forEach((doc) => {
+                        const exercise = doc.data();
+                        const exerciseElement = document.createElement('div');
+                        exerciseElement.className = 'exercise-item';
+                        exerciseElement.style.cssText = `
+                            padding: 15px;
+                            margin-bottom: 10px;
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 8px;
+                        `;
+                        
+                        // Main exercise row
+                        const mainRow = document.createElement('div');
+                        mainRow.style.cssText = `
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 10px;
+                        `;
+
+                        // Toggle button and name container
+                        const nameContainer = document.createElement('div');
+                        nameContainer.style.cssText = `
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            flex: 1;
+                        `;
+
+                        // Toggle button
+                        const toggleBtn = document.createElement('button');
+                        toggleBtn.className = 'toggle-btn';
+                        toggleBtn.innerHTML = '+';
+                        toggleBtn.onclick = () => toggleSets(doc.id);
+                        nameContainer.appendChild(toggleBtn);
+
+                        // Exercise name
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'exercise-name';
+                        nameSpan.textContent = exercise.name;
+                        nameContainer.appendChild(nameSpan);
+
+                        mainRow.appendChild(nameContainer);
+                        
+                        // Button container
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.style.cssText = `
+                            display: flex;
+                            gap: 8px;
+                            align-items: center;
+                        `;
+                        
+                        // Rename button
+                        const renameBtn = document.createElement('button');
+                        renameBtn.innerHTML = '✏️';
+                        renameBtn.style.cssText = `
+                            background: none;
+                            border: none;
+                            color: #ffd700;
+                            cursor: pointer;
+                            padding: 5px;
+                            margin: 0;
+                            font-size: 16px;
+                        `;
+                        renameBtn.onclick = () => renameExercise(doc.id, exercise.name, categoryId);
+                        buttonContainer.appendChild(renameBtn);
+                        
+                        // Delete button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.innerHTML = '🗑️';
+                        deleteBtn.style.cssText = `
+                            background: none;
+                            border: none;
+                            color: #ff4444;
+                            cursor: pointer;
+                            padding: 5px;
+                            margin: 0;
+                            font-size: 16px;
+                        `;
+                        deleteBtn.onclick = () => deleteExercise(doc.id, categoryId);
+                        buttonContainer.appendChild(deleteBtn);
+                        
+                        mainRow.appendChild(buttonContainer);
+                        exerciseElement.appendChild(mainRow);
+
+                        // Sets container
+                        const setsContainer = document.createElement('div');
+                        setsContainer.className = 'set-container';
+                        setsContainer.id = `sets-${doc.id}`;
+
+                        // Create 3 sets of inputs
+                        for (let i = 1; i <= 3; i++) {
+                            const setRow = document.createElement('div');
+                            setRow.className = 'set-row';
+                            const setInputId = `${doc.id}_set${i}`;
+                            const kgInputId = `${doc.id}_kg${i}`;
+                            
+                            setRow.innerHTML = `
+                                <input 
+                                    type="number" 
+                                    class="set-input" 
+                                    id="${setInputId}"
+                                    placeholder="Set ${i}" 
+                                    min="0"
+                                    value="${exerciseData[setInputId] || ''}"
+                                    onchange="saveTemporaryData('${setInputId}', this.value)"
+                                >
+                                <input 
+                                    type="number" 
+                                    class="set-input" 
+                                    id="${kgInputId}"
+                                    placeholder="Kg" 
+                                    min="0" 
+                                    step="0.5"
+                                    value="${exerciseData[kgInputId] || ''}"
+                                    onchange="saveTemporaryData('${kgInputId}', this.value)"
+                                >
+                            `;
+                            setsContainer.appendChild(setRow);
+                        }
+
+                        exerciseElement.appendChild(setsContainer);
+                        container.appendChild(exerciseElement);
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error loading exercises:', error);
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #ff4444;">
+                            ${error.message || 'Error loading exercises. Please try again.'}
+                        </div>
+                    `;
+                });
+        }
+
+        // Add this new function to handle toggling sets visibility
+        function toggleSets(exerciseId) {
+            const setsContainer = document.getElementById(`sets-${exerciseId}`);
+            const toggleBtn = setsContainer.parentElement.querySelector('.toggle-btn');
+            
+            if (setsContainer.style.display === 'none' || !setsContainer.style.display) {
+                setsContainer.style.display = 'block';
+                toggleBtn.innerHTML = '-';
+            } else {
+                setsContainer.style.display = 'none';
+                toggleBtn.innerHTML = '+';
+            }
+        }
+
+        function renameExercise(exerciseId, currentName, categoryId) {
+            const newName = prompt('Enter new name for exercise:', currentName);
+            
+            if (newName && newName.trim() !== '' && newName !== currentName) {
+                db.collection('exercises')
+                    .doc(exerciseId)
+                    .update({
+                        name: newName.trim(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    })
+                    .then(() => {
+                        console.log('Exercise renamed successfully');
+                        loadExercises(categoryId);
+                    })
+                    .catch((error) => {
+                        console.error('Error renaming exercise:', error);
+                        alert('Error renaming exercise');
+                    });
+            }
+        }
+
+        function deleteExercise(exerciseId, categoryId) {
+            if (confirm('Are you sure you want to delete this exercise?')) {
+                db.collection('exercises')
+                    .doc(exerciseId)
+                    .delete()
+                    .then(() => {
+                        console.log('Exercise deleted successfully');
+                        loadExercises(categoryId);
+                    })
+                    .catch((error) => {
+                        console.error('Error deleting exercise:', error);
+                        alert('Error deleting exercise');
+                    });
+            }
+        }
+
+        // Add this function after your existing functions
+
+async function saveWorkout() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert('Please log in to save your workout');
+        return;
+    }
+
+    const allCategories = document.querySelectorAll('.exercise-container');
+    let workoutData = {
+        userId: user.uid,
+        date: firebase.firestore.FieldValue.serverTimestamp(),
+        categories: []
+    };
+
+    let hasData = false;
+
+    // Check all categories for exercises
+    allCategories.forEach((categoryContainer) => {
+        const categoryId = categoryContainer.id.replace('exercise-container-', '');
+        const exercises = categoryContainer.querySelectorAll('.exercise-item');
+        const categoryExercises = [];
+
+        // Collect data from all exercises in this category
+        exercises.forEach((exercise) => {
+            const exerciseId = exercise.querySelector('.set-container').id.replace('sets-', '');
+            const exerciseName = exercise.querySelector('.exercise-name').textContent;
+            const sets = [];
+
+            // Collect data from each set
+            for (let i = 1; i <= 3; i++) {
+                const setInput = document.getElementById(`${exerciseId}_set${i}`);
+                const kgInput = document.getElementById(`${exerciseId}_kg${i}`);
+                
+                if (setInput?.value || kgInput?.value) {
+                    sets.push({
+                        setNumber: i,
+                        reps: setInput?.value || null,
+                        weight: kgInput?.value || null
+                    });
+                    hasData = true;
+                }
+            }
+
+            if (sets.length > 0) {
+                categoryExercises.push({
+                    exerciseId: exerciseId,
+                    name: exerciseName,
+                    sets: sets
+                });
+            }
+        });
+
+        // Only add category if it has exercises with data
+        if (categoryExercises.length > 0) {
+            workoutData.categories.push({
+                categoryId: categoryId,
+                name: defaultCategories.find(c => c.id === categoryId)?.name || '',
+                exercises: categoryExercises
+            });
+        }
+    });
+
+    if (!hasData) {
+        alert('Please fill in at least one set before saving');
+        return;
+    }
+
+    try {
+        // Save to workouts collection
+        await db.collection('workouts').add(workoutData);
+        
+        // Show success message
+        alert('Workout saved successfully!');
+        
+        // Clear all inputs but keep exercises
+        document.querySelectorAll('.exercise-item').forEach((exercise) => {
+            const setsContainer = exercise.querySelector('.set-container');
+            const inputs = setsContainer.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.value = '';
+            });
+        });
+        
+        // Clear temporary data
+        exerciseData = {};
+        localStorage.removeItem('exerciseData');
+        
+    } catch (error) {
+        console.error('Error saving workout:', error);
+        alert('Error saving workout: ' + error.message);
+    }
+}
+        // Add this line right after your Firebase initialization
+        loadSavedData();  // Load saved data when page initializes
+
+        // Add these functions to handle workout history
+        function viewHistory() {
+            document.getElementById('workout-history-modal').style.display = 'block';
+            populateCategoryButtons();
+            loadWorkoutHistory(7); // Default to 1 week
+        }
+
+        // Workout Progress Module
+        function viewProgress() {
+            showWorkoutProgressModal();
+        }
+
+        function showWorkoutProgressModal() {
+            if (!document.getElementById('workout-progress-modal')) {
+                // Create modal if not exists
+                const modal = document.createElement('div');
+                modal.id = 'workout-progress-modal';
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h2 style="margin-bottom:20px;">Workout Progress</h2>
+                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:15px;">
+                            <div style="display:flex;justify-content:center;gap:8px;margin-bottom:15px;">
+                                <button onclick="loadWorkoutProgress(7)" class="period-btn active">1 Week</button>
+                                <button onclick="loadWorkoutProgress(30)" class="period-btn">1 Month</button>
+                                <button onclick="loadWorkoutProgress(180)" class="period-btn">6 Months</button>
+                                <button onclick="loadWorkoutProgress(365)" class="period-btn">1 Year</button>
+                            </div>
+                        </div>
+                        <div id="progress-category-buttons" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px;"></div>
+                        <div id="workout-progress-content" style="max-height:400px;overflow-y:auto;margin-bottom:20px;"></div>
+                        <button onclick="document.getElementById('workout-progress-modal').style.display='none'" style="background:#666;">Close</button>
+                    </div>`;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('workout-progress-modal').style.display = 'block';
+            populateProgressCategoryButtons();
+            loadWorkoutProgress(7); // Default to 1 week
+        }
+
+        function populateProgressCategoryButtons() {
+            const container = document.getElementById('progress-category-buttons');
+            let html = `<button onclick="filterProgressByCategory('all')" class="category-filter-btn active">All</button>`;
+            defaultCategories.forEach(cat => {
+                html += `<button onclick="filterProgressByCategory('${cat.id}')" class="category-filter-btn">${cat.name}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+    // Declare currentProgressCategory only once at the top level
+    var currentProgressCategory = 'all';
+    // Declare currentProgressData only once at the top level
+    var currentProgressData = [];
+
+        function filterProgressByCategory(categoryId) {
+            document.querySelectorAll('#progress-category-buttons .category-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`#progress-category-buttons [onclick*=filterProgressByCategory][onclick*='${categoryId}']`).classList.add('active');
+            currentProgressCategory = categoryId;
+            displayWorkoutProgress(currentProgressData);
+        }
+
+        function loadWorkoutProgress(days) {
+            // Update active button
+            const btns = document.querySelectorAll('#workout-progress-modal .period-btn');
+            btns.forEach(btn => {
+                btn.classList.remove('active');
+                const match = btn.getAttribute('onclick').match(/loadWorkoutProgress\((\d+)\)/);
+                if (match && parseInt(match[1]) === days) {
+                    btn.classList.add('active');
+                }
+            });
+            const progressContent = document.getElementById('workout-progress-content');
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                progressContent.innerHTML = '<p style="text-align:center;color:#ff4444;">Please log in to view progress</p>';
+                return;
+            }
+            progressContent.innerHTML = '<p style="text-align:center;">Loading...</p>';
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            db.collection('workouts')
+                .where('userId', '==', user.uid)
+                .orderBy('date', 'asc')
+                .get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        progressContent.innerHTML = '<p style="text-align:center;color:#666;">No workouts found</p>';
+                        return;
+                    }
+                    let workouts = [];
+                    snapshot.forEach(doc => {
+                        const workout = doc.data();
+                        if (workout.date && workout.date.toDate() >= startDate) {
+                            workouts.push({...workout, date: workout.date.toDate()});
+                        }
+                    });
+                    currentProgressData = workouts;
+                    displayWorkoutProgress(workouts);
+                })
+                .catch(error => {
+                    console.error('Error loading workout progress:', error);
+                    progressContent.innerHTML = `<p style="text-align:center;color:#ff4444;">Error loading progress: ${error.message}</p>`;
+                });
+        }
+
+        function displayWorkoutProgress(workouts) {
+            const progressContent = document.getElementById('workout-progress-content');
+            let filtered = workouts;
+            if (currentProgressCategory !== 'all') {
+                filtered = workouts.filter(w => w.categories && w.categories.some(c => c.categoryId === currentProgressCategory));
+            }
+            // Collect exercise progress by name
+            let exerciseMap = {};
+            filtered.forEach(workout => {
+                if (!workout.categories) return;
+                workout.categories.forEach(category => {
+                    if (currentProgressCategory !== 'all' && category.categoryId !== currentProgressCategory) return;
+                    if (!category.exercises) return;
+                    category.exercises.forEach(ex => {
+                        if (!ex.name) return;
+                        if (!exerciseMap[ex.name]) exerciseMap[ex.name] = [];
+                        let sessionTotalVolume = 0;
+                        let sessionBestSet = 0;
+                        let sessionHighestWeight = 0;
+                        ex.sets.forEach(set => {
+                            const reps = Number(set.reps) || 0;
+                            const weight = Number(set.weight) || 0;
+                            const setVolume = reps * weight;
+                            sessionTotalVolume += setVolume;
+                            if (setVolume > sessionBestSet) sessionBestSet = setVolume;
+                            if (weight > sessionHighestWeight) sessionHighestWeight = weight;
+                        });
+                        exerciseMap[ex.name].push({date: workout.date, totalVolume: sessionTotalVolume, bestSet: sessionBestSet, highestWeight: sessionHighestWeight});
+                    });
+                });
+            });
+            // Chart for each exercise
+            let html = '';
+            Object.keys(exerciseMap).forEach(exName => {
+                const dataArr = exerciseMap[exName];
+                if (dataArr.length < 2) return; // Need at least 2 points for trend
+                // Sort by date
+                dataArr.sort((a,b)=>a.date-b.date);
+                // Prepare chart data
+                const labels = dataArr.map(d=>`${d.date.toLocaleDateString()}`);
+                const volumes = dataArr.map(d=>d.totalVolume);
+                const repsArr = dataArr.map(d=>{
+                    // Sum all reps for this session
+                    let reps = 0;
+                    if (workouts && Array.isArray(workouts)) {
+                        // Find the matching workout for this date
+                        const workout = workouts.find(w => w.date.getTime() === d.date.getTime());
+                        if (workout && workout.categories) {
+                            workout.categories.forEach(category => {
+                                if (category.exercises) {
+                                    category.exercises.forEach(ex => {
+                                        if (ex.name === exName && ex.sets) {
+                                            ex.sets.forEach(set => {
+                                                reps += Number(set.reps) || 0;
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                    return reps;
+                });
+                // Trend
+                const volumeDiff = volumes[volumes.length-1] - volumes[0];
+                const trendIcon = volumeDiff > 0 ? '📈' : volumeDiff < 0 ? '📉' : '➡️';
+                // Calculate best set, total volume, highest weight, and monthly averages
+                const bestSet = Math.max(...dataArr.map(d=>d.bestSet));
+                const highestWeight = Math.max(...dataArr.map(d=>d.highestWeight));
+                const totalVolume = volumes.reduce((a,b)=>a+b,0);
+                // Monthly averages
+                let monthlyMap = {};
+                dataArr.forEach(d => {
+                    const monthKey = `${d.date.getFullYear()}-${d.date.getMonth()+1}`;
+                    if (!monthlyMap[monthKey]) monthlyMap[monthKey] = [];
+                    monthlyMap[monthKey].push(d.totalVolume);
+                });
+                let monthlyAverages = Object.entries(monthlyMap).map(([month, arr]) => {
+                    const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
+                    return {month, avg};
+                });
+                let monthlyCompare = '';
+                if (monthlyAverages.length > 1) {
+                    const last = monthlyAverages[monthlyAverages.length-1].avg;
+                    const prev = monthlyAverages[monthlyAverages.length-2].avg;
+                    const diff = last - prev;
+                    monthlyCompare = `Monthly avg change: <span style="color:${diff>0?'#4CAF50':'#ff4444'};font-weight:bold;">${diff>0?'+':''}${diff.toFixed(1)}kg</span>`;
+                }
+                html += `<div style="background:rgba(255,255,255,0.1);padding:15px;border-radius:8px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span style="font-weight:bold;font-size:1.1em;">${exName}</span>
+                        <span style="color:${volumeDiff>0?'#4CAF50':'#ff4444'};font-weight:bold;">${trendIcon} ${volumeDiff>0?'+':''}${volumeDiff.toFixed(1)}kg</span>
+                    </div>
+                    <canvas id="chart-${exName.replace(/\s/g,'-')}"></canvas>
+                    <div style='margin-top:10px;'>
+                        <table style='width:100%;font-size:0.95em;background:rgba(255,255,255,0.05);border-radius:6px;'>
+                            <thead>
+                                <tr style='color:#ffd700;'>
+                                    <th style='text-align:left;padding:4px;'>Date</th>
+                                    <th style='text-align:right;padding:4px;'>Best set (kg)</th>
+                                    <th style='text-align:right;padding:4px;'>Total volume (kg)</th>
+                                    <th style='text-align:right;padding:4px;'>Highest weight (kg)</th>
+                                    <th style='text-align:right;padding:4px;'>Total reps</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dataArr.map(d => {
+                                    // Calculate total reps for this session
+                                    let reps = 0;
+                                    if (workouts && Array.isArray(workouts)) {
+                                        const workout = workouts.find(w => w.date.getTime() === d.date.getTime());
+                                        if (workout && workout.categories) {
+                                            workout.categories.forEach(category => {
+                                                if (category.exercises) {
+                                                    category.exercises.forEach(ex => {
+                                                        if (ex.name === exName && ex.sets) {
+                                                            ex.sets.forEach(set => {
+                                                                reps += Number(set.reps) || 0;
+                                                            });
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    }
+                                    return `<tr>
+                                        <td style='padding:4px;'>${d.date.toLocaleDateString()}</td>
+                                        <td style='text-align:right;padding:4px;'>${d.bestSet}</td>
+                                        <td style='text-align:right;padding:4px;'>${d.totalVolume}</td>
+                                        <td style='text-align:right;padding:4px;'>${d.highestWeight}</td>
+                                        <td style='text-align:right;padding:4px;'>${reps}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        <div style='color:#888;font-size:0.9em;margin-top:4px;'>
+                            <b>Best set:</b> Highest volume of a single set (reps × weight) in this session.<br>
+                            <b>Total volume:</b> Sum of all sets (reps × weight) in this session.<br>
+                            <b>Highest weight:</b> Maximum weight used in any single set in this session.<br>
+                            <b>Total reps:</b> Sum of all reps for this exercise in this session.
+                        </div>
+                    </div>
+                    <div style="margin-top:2px;color:#2196F3;font-size:0.95em;">${monthlyCompare}</div>
+                </div>`;
+            });
+            if (!html) html = '<p style="text-align:center;color:#666;">No progress data for selected criteria</p>';
+            progressContent.innerHTML = html;
+            // Render charts
+            Object.keys(exerciseMap).forEach(exName => {
+                const dataArr = exerciseMap[exName];
+                if (dataArr.length < 2) return;
+                const labels = dataArr.map(d=>`${d.date.toLocaleDateString()}`);
+                const volumes = dataArr.map(d=>d.totalVolume);
+                const repsArr = dataArr.map(d=>{
+                    // Sum all reps for this session
+                    let reps = 0;
+                    if (workouts && Array.isArray(workouts)) {
+                        // Find the matching workout for this date
+                        const workout = workouts.find(w => w.date.getTime() === d.date.getTime());
+                        if (workout && workout.categories) {
+                            workout.categories.forEach(category => {
+                                if (category.exercises) {
+                                    category.exercises.forEach(ex => {
+                                        if (ex.name === exName && ex.sets) {
+                                            ex.sets.forEach(set => {
+                                                reps += Number(set.reps) || 0;
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                    return reps;
+                });
+                const ctx = document.getElementById(`chart-${exName.replace(/\s/g,'-')}`);
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Total Volume (kg)',
+                                    data: volumes,
+                                    borderColor: '#ffd700',
+                                    backgroundColor: 'rgba(255,215,0,0.1)',
+                                    tension: 0.3,
+                                    fill: true
+                                },
+                                {
+                                    label: 'Total Reps',
+                                    data: repsArr,
+                                    borderColor: '#2196F3',
+                                    backgroundColor: 'rgba(33,150,243,0.1)',
+                                    tension: 0.3,
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {legend:{position:'top'}},
+                            scales: {
+                                y: {beginAtZero:true,grid:{color:'rgba(255,255,255,0.1)'}},
+                                x: {grid:{color:'rgba(255,255,255,0.1)'}}
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function populateCategoryButtons() {
+            const categoryButtonsContainer = document.getElementById('category-filter-buttons');
+            let html = `<button onclick="filterWorkoutsByCategory('all')" class="category-filter-btn active">All</button>`;
+            
+            defaultCategories.forEach(cat => {
+                html += `
+                    <button 
+                        onclick="filterWorkoutsByCategory('${cat.id}')" 
+                        class="category-filter-btn"
+                    >${cat.name}</button>
+                `;
+            });
+            
+            categoryButtonsContainer.innerHTML = html;
+        }
+
+        function loadWorkoutHistory(days) {
+            // Update active button
+            const btns = document.querySelectorAll('#workout-history-modal .period-btn');
+            btns.forEach(btn => {
+                btn.classList.remove('active');
+                const match = btn.getAttribute('onclick').match(/loadWorkoutHistory\((\d+)\)/);
+                if (match && parseInt(match[1]) === days) {
+                    btn.classList.add('active');
+                }
+            });
+            const historyContent = document.getElementById('workout-history-content');
+            const user = firebase.auth().currentUser;
+            
+            if (!user) {
+                historyContent.innerHTML = '<p style="text-align: center; color: #ff4444;">Please log in to view history</p>';
+                return;
+            }
+
+            historyContent.innerHTML = '<p style="text-align: center;">Loading...</p>';
+
+            // Calculate date range
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            db.collection('workouts')
+                .where('userId', '==', user.uid)
+                .orderBy('date', 'desc')
+                .get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        historyContent.innerHTML = '<p style="text-align: center; color: #666;">No workouts found</p>';
+                        return;
+                    }
+
+                    currentWorkouts = [];
+                    snapshot.forEach(doc => {
+                        const workout = doc.data();
+                        if (workout.date.toDate() >= startDate) {
+                            currentWorkouts.push({
+                                id: doc.id,
+                                ...workout
+                            });
+                        }
+                    });
+
+                    displayWorkouts(currentWorkouts);
+                })
+                .catch(error => {
+                    console.error('Error loading workout history:', error);
+                    historyContent.innerHTML = `
+                        <p style="text-align: center; color: #ff4444;">
+                            Error loading workout history: ${error.message}
+                        </p>
+                    `;
+                });
+        }
+
+        function filterWorkoutsByCategory(categoryId) {
+            // Update active category button
+            document.querySelectorAll('.category-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="filterWorkoutsByCategory('${categoryId}')"]`).classList.add('active');
+
+            currentCategoryFilter = categoryId;
+            displayWorkouts(currentWorkouts);
+        }
+
+        function displayWorkouts(workouts) {
+            const historyContent = document.getElementById('workout-history-content');
+            let html = '<div style="display: grid; gap: 15px;">';
+
+            // Group workouts by date (YYYY-MM-DD)
+            const grouped = {};
+            workouts.forEach(workout => {
+                if (!workout.categories || !Array.isArray(workout.categories)) return;
+                const dateObj = workout.date.toDate();
+                const dateStr = dateObj.toLocaleDateString();
+                if (!grouped[dateStr]) grouped[dateStr] = [];
+                grouped[dateStr].push(workout);
+            });
+
+            Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(dateStr => {
+                const [day, month, year] = dateStr.split(/[\/\-\.]/).map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                html += `<div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <div style="font-weight: bold; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">${dateStr} <span style='color:black;'>${dayName}</span></div>`;
+
+        // Group categories by name for this date
+        const categoryMap = {};
+        grouped[dateStr].forEach(workout => {
+            const categories = workout.categories.filter(cat => currentCategoryFilter === 'all' || cat.categoryId === currentCategoryFilter);
+            categories.forEach(category => {
+                if (!category || !category.name || !category.exercises) return;
+                if (!categoryMap[category.name]) categoryMap[category.name] = [];
+                categoryMap[category.name].push(...category.exercises);
+            });
+        });
+
+        Object.keys(categoryMap).forEach(categoryName => {
+            html += `<div style="margin-bottom: 10px;"><div style="color: #ffd700; margin-bottom: 5px; font-weight: bold;">${categoryName}</div>`;
+            categoryMap[categoryName].forEach(exercise => {
+                if (!exercise || !exercise.name || !exercise.sets) return;
+                html += `<div style="margin-left: 15px; margin-bottom: 8px;"><div style="font-weight: 500;">${exercise.name}</div><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 5px; margin-left: 15px; color: #666; font-size: 0.9em;">`;
+                exercise.sets.forEach(set => {
+                    if (!set) return;
+                    html += `<div>Set ${set.setNumber}: ${set.reps || '0'} × ${set.weight || '0'}kg</div>`;
+                });
+                html += `</div></div>`;
+            });
+            html += `</div>`;
+        });
+
+        html += `</div>`;
+    });
+
+    if (html === '<div style="display: grid; gap: 15px;">') {
+        html += '<p style="text-align: center; color: #666;">No workouts found for selected criteria</p>';
+    }
+
+    html += '</div>';
+    historyContent.innerHTML = html;
+}
+
+        function showBodyWeightModal() {
+            document.getElementById('body-weight-modal').style.display = 'block';
+        }
+
+        function closeBodyWeightModal() {
+            document.getElementById('body-weight-modal').style.display = 'none';
+        }
+
+        function saveBodyWeight() {
+            const weightInput = document.getElementById('body-weight-input');
+            const weight = weightInput.value;
+            
+            if (!weight) {
+                alert('Please enter your weight');
+                return;
+            }
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Please log in to save your weight');
+                return;
+            }
+
+            db.collection('bodyweights').add({
+                userId: user.uid,
+                weight: parseFloat(weight),
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                alert('Weight saved successfully!');
+                weightInput.value = '';
+            })
+            .catch(error => {
+                console.error('Error saving weight:', error);
+                alert('Error saving weight');
+            });
+        }
+
+        function showWeightHistory() {
+            document.getElementById('body-weight-modal').style.display = 'none';
+            document.getElementById('weight-history-modal').style.display = 'block';
+            loadWeightHistory(7); // Default to 1 week
+        }
+
+        // Body Weight History Module
+        function loadWeightHistory(days) {
+            const historyContent = document.getElementById('weight-history-content');
+            // Update active button
+            const btns = document.querySelectorAll('#weight-history-modal .period-btn');
+            btns.forEach(btn => {
+                btn.classList.remove('active');
+                // Extract days from onclick attribute
+                const match = btn.getAttribute('onclick').match(/loadWeightHistory\((\d+)\)/);
+                if (match && parseInt(match[1]) === days) {
+                    btn.classList.add('active');
+                }
+            });
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                historyContent.innerHTML = '<p style="text-align:center;color:#ff4444;">Please log in to view history</p>';
+                return;
+            }
+            historyContent.innerHTML = '<p style="text-align:center;">Loading...</p>';
+            // Calculate date range
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            db.collection('bodyweights')
+                .where('userId', '==', user.uid)
+                .orderBy('date', 'desc')
+                .get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        historyContent.innerHTML = '<p style="text-align:center;color:#666;">No weight records found</p>';
+                        return;
+                    }
+                    let html = '<div style="display:grid;gap:10px;">';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (!data.date || !data.weight) return;
+                        const entryDate = data.date.toDate();
+                        if (entryDate >= startDate) {
+                            html += `<div style="background:rgba(255,255,255,0.1);padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                                <span>${entryDate.toLocaleDateString()} ${entryDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+                                <span style="font-weight:bold;">${data.weight} kg</span>
+                            </div>`;
+                        }
+                    });
+                    html += '</div>';
+                    if (html === '<div style="display:grid;gap:10px;">') {
+                        html += '<p style="text-align:center;color:#666;">No records found for selected period</p>';
+                    }
+                    historyContent.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading weight history:', error);
+                    historyContent.innerHTML = `<p style="text-align:center;color:#ff4444;">Error loading history: ${error.message}</p>`;
+                });
+        }
+
+        function showWeightProgress() {
+            document.getElementById('body-weight-modal').style.display = 'none';
+            document.getElementById('weight-progress-modal').style.display = 'block';
+            loadWeightProgress(30); // Default to 1 month
+        }
+
+        // Update the loadWeightProgress function to use weekly averages
+function loadWeightProgress(days = 30) {
+    // Update active button
+    const btns = document.querySelectorAll('#weight-progress-modal .period-btn');
+    btns.forEach(btn => {
+        btn.classList.remove('active');
+        const match = btn.getAttribute('onclick').match(/loadWeightProgress\(([^)]+)\)/);
+        if (match) {
+            let btnValue = match[1].replace(/'/g, '');
+            let selectedValue = typeof days === 'string' ? days : days.toString();
+            if (btnValue === selectedValue) btn.classList.add('active');
+        }
+    });
+    const progressContent = document.getElementById('weight-progress-content');
+    const user = firebase.auth().currentUser;
+    
+    if (!user) {
+        progressContent.innerHTML = '<p>Please log in to view progress</p>';
+        return;
+    }
+
+    progressContent.innerHTML = `
+        <canvas id="weightChart" style="margin-bottom: 20px;"></canvas>
+        <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
+        <h3 style="margin-bottom: 15px;">Weekly Averages</h3>
+        <div id="weeklyDetails" style="max-height: 300px; overflow-y: auto;"></div>
+    `;
+
+    db.collection('bodyweights')
+        .where('userId', '==', user.uid)
+        .orderBy('date', 'desc')
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                progressContent.innerHTML = '<p>No weight records found</p>';
+                return;
+            }
+
+            // Group weights by week
+            const weeklyWeights = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const date = data.date.toDate();
+                const monday = getMonday(date);
+                const weekKey = monday.toISOString().split('T')[0];
+
+                if (!weeklyWeights[weekKey]) {
+                    weeklyWeights[weekKey] = {
+                        weights: [],
+                        mondayDate: monday
+                    };
+                }
+                weeklyWeights[weekKey].weights.push(data.weight);
+            });
+
+            // Calculate weekly averages and prepare chart data
+            const weeks = [];
+            const averages = [];
+            const details = [];
+
+            Object.entries(weeklyWeights)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .forEach(([weekKey, data]) => {
+                    const sum = data.weights.reduce((a, b) => a + b, 0);
+                    const avg = sum / data.weights.length;
+                    
+                    weeks.push(formatDate(data.mondayDate));
+                    averages.push(avg);
+                    details.push({
+                        week: formatDate(data.mondayDate),
+                        average: avg.toFixed(1),
+                        readings: data.weights.length
+                    });
+                });
+
+            // Create the chart
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Weekly Average Weight (kg)',
+                        data: averages,
+                        borderColor: '#ffd700',
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y.toFixed(1)} kg`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Display weekly details below the chart
+            const weeklyDetails = document.getElementById('weeklyDetails');
+            let html = '<div style="display: grid; gap: 10px;">';
+            details.reverse().forEach((detail, index) => {
+                const prevWeek = details[index + 1];
+                const difference = prevWeek ? 
+                    (detail.average - prevWeek.average).toFixed(1) : null;
+                
+                const trend = difference ? 
+                    (difference > 0 ? '📈' : difference < 0 ? '📉' : '➡️') : '';
+                
+                const differenceText = difference ? 
+                    `(${difference > 0 ? '+' : ''}${difference} kg)` : '';
+
+                html += `
+                    <div style="
+                        background: rgba(255,255,255,0.1);
+                        padding: 15px;
+                        border-radius: 8px;
+                    ">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Week of ${detail.week}</span>
+                            <span style="color: #666;">${detail.readings} readings</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold;">${detail.average} kg</span>
+                            <span style="color: ${difference > 0 ? '#ff4444' : '#4CAF50'};">
+                                ${trend} ${differenceText}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            weeklyDetails.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            progressContent.innerHTML = '<p>Error loading progress</p>';
+        });
+}
+
+        // Helper function to get the Monday of the week for a given date
+function getMonday(date) {
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    return new Date(date.setDate(diff));
+}
+
+// Helper function to format date as "MMM DD, YYYY"
+function formatDate(date) {
+    return date.toLocaleString('default', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+    </script>
+
+    <!-- Templates -->
+    <div id="templates" style="display: none;">
+        <template id="login-template">
+            <div id="login-form">
+                <h2>Login</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button onclick="login()">Login</button>
+                <button onclick="showRegisterForm()">Switch to Register</button>
+            </div>
+        </template>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            
+            <div class="settings-section">
+                <h3>Profile</h3>
+                <div class="form-group">
+                    <label for="change-name">Change Name</label>
+                    <input type="text" id="change-name" placeholder="Enter new name">
+                    <button onclick="changeName()">Update Name</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Data Management</h3>
+                <button onclick="exportData()">Export Backup Data</button>
+                <button onclick="importData()">Import Backup Data</button>
+            </div>
+
+            <div class="settings-section danger-zone">
+                <h3>Danger Zone</h3>
+                <button onclick="resetExercises()">Reset Exercise Data</button>
+                <button onclick="resetWeights()">Reset Weight Data</button>
+            </div>
+
+          
+
+            <div class="version-info">
+                Version 1.0.0
+            </div>
+
+            <button onclick="closeSettings()">Close</button>
+        </div>
+    </div>
+
+    <!-- Body Weight Modal -->
+    <div id="body-weight-modal" class="modal">
+    <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Body Weight</h2>
+            <div class="form-group">
+                <input 
+                    type="number" 
+                    id="body-weight-input" 
+                    placeholder="Enter weight (kg)" 
+                    step="0.1" 
+                    min="0"
+                    style="
+                        font-size: 18px;
+                        text-align: center;
+                        margin-bottom: 15px;
+                    "
+                >
+                <button 
+                    onclick="saveBodyWeight()"
+                    style="background: linear-gradient(135deg, #ffd700, #ffb700);"
+                >Save Weight</button>
+                
+                <div style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-top: 20px;
+                ">
+                    <button 
+                        onclick="showWeightHistory()"
+                        style="background: linear-gradient(135deg, #2196F3, #1976D2);"
+                    >History</button>
+                    <button 
+                        onclick="showWeightProgress()"
+                        style="background: linear-gradient(135deg, #1565C0, #0D47A1);"
+                    >Progress</button>
+                </div>
+            </div>
+            <button 
+                onclick="closeBodyWeightModal()"
+                style="margin-top: 15px; background: #666;"
+            >Close</button>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+<div id="weight-history-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 20px;">Weight History</h2>
+        <div style="
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        ">
+            <button onclick="loadWeightHistory(7)" class="period-btn active">1 Week</button>
+            <button onclick="loadWeightHistory(30)" class="period-btn">1 Month</button>
+            <button onclick="loadWeightHistory(180)" class="period-btn">6 Months</button>
+            <button onclick="loadWeightHistory(365)" class="period-btn">1 Year</button>
+        </div>
+        <div id="weight-history-content"></div>
+        <button 
+            onclick="document.getElementById('weight-history-modal').style.display='none'" 
+            style="background: #666; margin-top: 15px;"
+        >Close</button>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div id="weight-progress-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 20px;">Weight Progress</h2>
+        <div style="
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        ">
+            <button onclick="loadWeightProgress(30)" class="period-btn active">1 Month</button>
+            <button onclick="loadWeightProgress(90)" class="period-btn">3 Months</button>
+            <button onclick="loadWeightProgress(180)" class="period-btn">6 Months</button>
+            <button onclick="loadWeightProgress(365)" class="period-btn">1 Year</button>
+        </div>
+        <div id="weight-progress-content">
+            <canvas id="weightChart"></canvas>
+            <div id="weeklyAverages" style="margin-top: 20px;"></div>
+        </div>
+        <button 
+            onclick="document.getElementById('weight-progress-modal').style.display='none'" 
+            style="background: #666; margin-top: 15px;"
+        >Close</button>
+    </div>
+</div>
+
+<!-- Workout History Modal -->
+<div id="workout-history-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 20px;">Workout History</h2>
+        <div style="
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        ">
+            <button onclick="loadWorkoutHistory(7)" class="period-btn active">1 Week</button>
+            <button onclick="loadWorkoutHistory(30)" class="period-btn">1 Month</button>
+            <button onclick="loadWorkoutHistory(180)" class="period-btn">6 Months</button>
+            <button onclick="loadWorkoutHistory(365)" class="period-btn">1 Year</button>
+        </div>
+        <div id="category-filter-buttons" style="
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        ">
+        </div>
+        <div id="workout-history-content" style="
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        "></div>
+        <button 
+            onclick="document.getElementById('workout-history-modal').style.display='none'" 
+            style="background: #666;"
+        >Close</button>
+    </div>
+</div>
+</body>
+</html>
