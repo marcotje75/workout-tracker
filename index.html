@@ -1625,6 +1625,7 @@ async function saveWorkout() {
                 modal.className = 'modal';
                 modal.innerHTML = `
                     <div class="modal-content">
+                        <button class="modal-close-btn" onclick="document.getElementById('workout-progress-modal').style.display='none'">×</button>
                         <h2 style="margin-bottom:20px;">Workout Progress</h2>
                         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:15px;">
                             <div style="display:flex;justify-content:center;gap:8px;margin-bottom:15px;">
@@ -1636,7 +1637,6 @@ async function saveWorkout() {
                         </div>
                         <div id="progress-category-buttons" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px;"></div>
                         <div id="workout-progress-content" style="max-height:400px;overflow-y:auto;margin-bottom:20px;"></div>
-                        <button onclick="document.getElementById('workout-progress-modal').style.display='none'" style="background:#666;">Close</button>
                     </div>`;
                 document.body.appendChild(modal);
             }
@@ -2404,6 +2404,7 @@ function formatDate(date) {
     <!-- Body Weight Modal -->
     <div id="body-weight-modal" class="modal">
     <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeBodyWeightModal()">×</button>
             <h2 style="margin-bottom: 20px;">Body Weight</h2>
             <div class="form-group">
                 <input 
@@ -2439,16 +2440,13 @@ function formatDate(date) {
                     >Progress</button>
                 </div>
             </div>
-            <button 
-                onclick="closeBodyWeightModal()"
-                style="margin-top: 15px; background: #666;"
-            >Close</button>
         </div>
     </div>
 
     <!-- History Modal -->
 <div id="weight-history-modal" class="modal">
     <div class="modal-content">
+        <button class="modal-close-btn" onclick="document.getElementById('weight-history-modal').style.display='none'">×</button>
         <h2 style="margin-bottom: 20px;">Weight History</h2>
         <div style="
             display: grid;
@@ -2462,16 +2460,13 @@ function formatDate(date) {
             <button onclick="loadWeightHistory(365)" class="period-btn">1 Year</button>
         </div>
         <div id="weight-history-content"></div>
-        <button 
-            onclick="document.getElementById('weight-history-modal').style.display='none'" 
-            style="background: #666; margin-top: 15px;"
-        >Close</button>
     </div>
 </div>
 
 <!-- Progress Modal -->
 <div id="weight-progress-modal" class="modal">
     <div class="modal-content">
+        <button class="modal-close-btn" onclick="document.getElementById('weight-progress-modal').style.display='none'">×</button>
         <h2 style="margin-bottom: 20px;">Weight Progress</h2>
         <div style="
             display: flex;
@@ -2488,10 +2483,6 @@ function formatDate(date) {
             <canvas id="weightChart"></canvas>
             <div id="weeklyAverages" style="margin-top: 20px;"></div>
         </div>
-        <button 
-            onclick="document.getElementById('weight-progress-modal').style.display='none'" 
-            style="background: #666; margin-top: 15px;"
-        >Close</button>
     </div>
 </div>
 
