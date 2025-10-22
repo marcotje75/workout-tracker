@@ -645,6 +645,39 @@
         // Add these global variables
         let currentWorkouts = [];
         let currentCategoryFilter = 'all';
+        
+        // Initialize exercise cache and counter when page loads
+        setTimeout(() => {
+            // Wait for authentication state before loading data
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    console.log("User authenticated, loading exercise cache...");
+                    // Load all exercises to populate the individual categories cache
+                    db.collection('exercises').get().then(querySnapshot => {
+                        console.log("Loading exercise categories cache...");
+                        querySnapshot.forEach(doc => {
+                            const data = doc.data();
+                            if (data.individualCategory) {
+                                exerciseIndividualCategories[doc.id] = data.individualCategory;
+                                console.log("Cached exercise:", doc.id, "->", data.individualCategory);
+                            }
+                        });
+                        console.log("Exercise categories cache loaded:", exerciseIndividualCategories);
+                        
+                        // Now update the counter
+                        updateDailyExerciseCounter();
+                    }).catch(error => {
+                        console.error("Error loading exercise cache:", error);
+                        // Still try to update counter even if cache fails
+                        updateDailyExerciseCounter();
+                    });
+                } else {
+                    console.log("User not authenticated, showing 0 exercises");
+                    // User not logged in, show 0 exercises
+                    updateCounterDisplay({}, 0);
+                }
+            });
+        }, 1000); // Small delay to ensure Firebase is ready
 
         // Verify Firestore connection
         db.enablePersistence()
@@ -712,6 +745,9 @@
             exerciseData[inputId] = value;
             // Save to localStorage as backup
             localStorage.setItem('exerciseData', JSON.stringify(exerciseData));
+            // Update the daily exercise counter
+            console.log('saveTemporaryData called:', inputId, value);
+            updateDailyExerciseCounter();
         }
 
         // Add this function to restore data when page loads
@@ -719,6 +755,10 @@
             const savedData = localStorage.getItem('exerciseData');
             if (savedData) {
                 exerciseData = JSON.parse(savedData);
+                // Update counter after a short delay to ensure DOM is ready
+                setTimeout(() => {
+                    updateDailyExerciseCounter();
+                }, 100);
             }
         }
 
@@ -752,6 +792,20 @@
             { id: 'cat4', name: 'Abs & Core' }
         ];
 
+        // Individual muscle categories for exercise classification
+        const individualCategories = [
+            { id: 'chest', name: 'Chest' },
+            { id: 'triceps', name: 'Triceps' },
+            { id: 'back', name: 'Back' },
+            { id: 'shoulders', name: 'Shoulders' },
+            { id: 'biceps', name: 'Biceps' },
+            { id: 'abs', name: 'Abs' },
+            { id: 'legs', name: 'Legs' }
+        ];
+
+        // Cache for exercise individual categories
+        const exerciseIndividualCategories = {};
+
         // Auth state observer
         auth.onAuthStateChanged((user) => {
             const authForms = document.getElementById('auth-forms');
@@ -779,6 +833,20 @@
                                     onclick="selectCategory('${cat.id}')"
                                 >${cat.name}</button>
                             `).join('')}
+                        </div>
+
+                        <div id="daily-exercise-counter" style="
+                            margin: 15px 0;
+                            padding: 12px;
+                            background: rgba(255, 215, 0, 0.1);
+                            border: 1px solid rgba(255, 215, 0, 0.3);
+                            border-radius: 8px;
+                            text-align: center;
+                            font-size: 14px;
+                            color: #ffd700;
+                            font-weight: 500;
+                        ">
+                            <div id="counter-content">Today: 0 exercises</div>
                         </div>
 
                         <div id="exercise-area">
@@ -1104,9 +1172,145 @@
         document.getElementById('login-template').innerHTML = loginTemplate;
 
         // Add this function as a placeholder for add exercise
+        // Exercise Modal Functions
+        let currentCategoryId = null;
+        let currentExerciseId = null;
+        let isEditMode = false;
+
+        function openExerciseModal(categoryId, exerciseId = null) {
+            console.log('openExerciseModal called with:', categoryId, exerciseId);
+            
+            currentCategoryId = categoryId;
+            currentExerciseId = exerciseId;
+            isEditMode = !!exerciseId;
+            
+            const modal = document.getElementById('exercise-modal');
+            console.log('Modal element found:', modal);
+            
+            if (!modal) {
+                alert('Modal not found! There might be a DOM issue.');
+                return;
+            }
+            
+            const title = document.getElementById('exercise-modal-title');
+            const nameInput = document.getElementById('exercise-name-input');
+            const categorySelect = document.getElementById('exercise-category-select');
+            
+            console.log('Modal elements:', { title, nameInput, categorySelect });
+            
+            // Populate category dropdown
+            categorySelect.innerHTML = '<option value="">Select muscle group...</option>';
+            individualCategories.forEach(cat => {
+                categorySelect.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            });
+            
+            if (isEditMode) {
+                title.textContent = 'Edit Exercise';
+                // Load current exercise data
+                db.collection('exercises').doc(exerciseId).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        nameInput.value = data.name || '';
+                        categorySelect.value = data.individualCategory || '';
+                    }
+                });
+            } else {
+                title.textContent = 'Add Exercise';
+                nameInput.value = '';
+                categorySelect.value = '';
+            }
+            
+            modal.style.display = 'block';
+            nameInput.focus();
+        }
+
+        function closeExerciseModal() {
+            document.getElementById('exercise-modal').style.display = 'none';
+            currentCategoryId = null;
+            currentExerciseId = null;
+            isEditMode = false;
+        }
+
+        function saveExerciseFromModal() {
+            const nameInput = document.getElementById('exercise-name-input');
+            const categorySelect = document.getElementById('exercise-category-select');
+            
+            const exerciseName = nameInput.value.trim();
+            const individualCategory = categorySelect.value;
+            
+            if (!exerciseName) {
+                alert('Please enter an exercise name');
+                return;
+            }
+            
+            if (!individualCategory) {
+                alert('Please select a muscle group category');
+                return;
+            }
+            
+            const exerciseData = {
+                name: exerciseName,
+                categoryId: currentCategoryId,
+                individualCategory: individualCategory,
+                userId: firebase.auth().currentUser.uid
+            };
+            
+            if (isEditMode) {
+                // Update existing exercise
+                exerciseData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                
+                db.collection('exercises').doc(currentExerciseId).update(exerciseData)
+                .then(() => {
+                    console.log('Exercise updated successfully');
+                    closeExerciseModal();
+                    loadExercises(currentCategoryId);
+                    setTimeout(() => {
+                        const selectElement = document.getElementById(`exercise-select-${currentCategoryId}`);
+                        selectElement.value = currentExerciseId;
+                        selectExercise(currentCategoryId, currentExerciseId);
+                    }, 500);
+                })
+                .catch((error) => {
+                    console.error('Error updating exercise:', error);
+                    alert('Error updating exercise: ' + error.message);
+                });
+            } else {
+                // Create new exercise
+                const exerciseId = 'exercise_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                exerciseData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                
+                db.collection('exercises').doc(exerciseId).set(exerciseData)
+                .then(() => {
+                    console.log('Exercise saved successfully');
+                    closeExerciseModal();
+                    loadExercises(currentCategoryId);
+                    setTimeout(() => {
+                        const selectElement = document.getElementById(`exercise-select-${currentCategoryId}`);
+                        selectElement.value = exerciseId;
+                        selectExercise(currentCategoryId, exerciseId);
+                    }, 500);
+                })
+                .catch((error) => {
+                    console.error('Error saving exercise:', error);
+                    alert('Error saving exercise: ' + error.message);
+                });
+            }
+        }
+
         function addExercise(categoryId) {
+            console.log('addExercise called with categoryId:', categoryId);
+            
+            // Temporary fallback to prompt-based system
             const exerciseName = prompt('Enter exercise name:');
             if (!exerciseName || !exerciseName.trim()) {
+                return;
+            }
+            
+            const categoryOptions = individualCategories.map(cat => `${cat.id}: ${cat.name}`).join('\n');
+            const selectedCategory = prompt(`Select muscle group by entering the ID:\n${categoryOptions}`);
+            
+            if (!selectedCategory || !individualCategories.find(cat => cat.id === selectedCategory)) {
+                alert('Invalid category selected');
                 return;
             }
             
@@ -1117,14 +1321,13 @@
             db.collection('exercises').doc(exerciseId).set({
                 name: exerciseName.trim(),
                 categoryId: categoryId,
+                individualCategory: selectedCategory,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 userId: firebase.auth().currentUser.uid
             })
             .then(() => {
                 console.log('Exercise saved successfully');
-                // Refresh the exercises list and select the new exercise
                 loadExercises(categoryId);
-                // Auto-select the newly created exercise after a short delay
                 setTimeout(() => {
                     const selectElement = document.getElementById(`exercise-select-${categoryId}`);
                     selectElement.value = exerciseId;
@@ -1138,6 +1341,7 @@
         }
 
         function editExercise(categoryId) {
+            console.log('editExercise called with categoryId:', categoryId);
             const selectElement = document.getElementById(`exercise-select-${categoryId}`);
             const exerciseId = selectElement.value;
             
@@ -1146,29 +1350,47 @@
                 return;
             }
             
-            const currentName = selectElement.querySelector(`option[value="${exerciseId}"]`).textContent;
-            const newName = prompt('Enter new exercise name:', currentName);
-            
-            if (!newName || !newName.trim() || newName.trim() === currentName) {
-                return;
-            }
-            
-            // Update in Firebase
-            db.collection('exercises').doc(exerciseId).update({
-                name: newName.trim()
-            })
-            .then(() => {
-                console.log('Exercise updated successfully');
-                // Refresh the exercises list and reselect the exercise
-                loadExercises(categoryId);
-                setTimeout(() => {
-                    selectElement.value = exerciseId;
-                    selectExercise(categoryId, exerciseId);
-                }, 500);
-            })
-            .catch((error) => {
-                console.error('Error updating exercise:', error);
-                alert('Error updating exercise: ' + error.message);
+            // Get current exercise data
+            db.collection('exercises').doc(exerciseId).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    const newName = prompt('Enter new exercise name:', data.name || '');
+                    if (!newName || !newName.trim()) {
+                        return;
+                    }
+                    
+                    const categoryOptions = individualCategories.map(cat => `${cat.id}: ${cat.name}`).join('\n');
+                    const currentCategory = data.individualCategory || '';
+                    const newCategory = prompt(`Select muscle group by entering the ID:\nCurrent: ${currentCategory}\n${categoryOptions}`, currentCategory);
+                    
+                    if (!newCategory || !individualCategories.find(cat => cat.id === newCategory)) {
+                        alert('Invalid category selected');
+                        return;
+                    }
+                    
+                    // Update in Firebase
+                    db.collection('exercises').doc(exerciseId).update({
+                        name: newName.trim(),
+                        individualCategory: newCategory,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    })
+                    .then(() => {
+                        console.log('Exercise updated successfully');
+                        loadExercises(categoryId);
+                        setTimeout(() => {
+                            selectElement.value = exerciseId;
+                            selectExercise(categoryId, exerciseId);
+                        }, 500);
+                    })
+                    .catch((error) => {
+                        console.error('Error updating exercise:', error);
+                        alert('Error updating exercise: ' + error.message);
+                    });
+                }
+            }).catch((error) => {
+                console.error('Error loading exercise:', error);
+                alert('Error loading exercise: ' + error.message);
             });
         }
 
@@ -1385,8 +1607,39 @@
             const selectedOption = selectElement.querySelector(`option[value="${exerciseId}"]`);
             const exerciseName = selectedOption ? selectedOption.textContent : 'Unknown Exercise';
             
-            // Display the selected exercise name
+            // Display the selected exercise name with category indicator
+            function updateExerciseNameWithCategory() {
+                // Check if exercise has individual category
+                let categoryIndicator = '';
+                if (exerciseIndividualCategories[exerciseId]) {
+                    const individualCategoryId = exerciseIndividualCategories[exerciseId];
+                    const individualCategoryName = individualCategories.find(cat => cat.id === individualCategoryId)?.name || individualCategoryId;
+                    categoryIndicator = ` <span style="color: #4CAF50; font-size: 0.75em; background: rgba(76, 175, 80, 0.1); padding: 1px 4px; border-radius: 3px; margin-left: 5px;">[${individualCategoryName}]</span>`;
+                } else {
+                    categoryIndicator = ` <span style="color: #FF5722; font-size: 0.75em; background: rgba(255, 87, 34, 0.1); padding: 1px 4px; border-radius: 3px; margin-left: 5px; cursor: pointer;" title="Individual category not set - click to edit exercise">⚠️ [Missing]</span>`;
+                }
+                
+                exerciseNameDisplay.innerHTML = exerciseName + categoryIndicator;
+            }
+            
+            // Initial display with just the name
             exerciseNameDisplay.textContent = exerciseName;
+            
+            // Cache the individual category for this exercise
+            db.collection('exercises').doc(exerciseId).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.individualCategory) {
+                        exerciseIndividualCategories[exerciseId] = data.individualCategory;
+                    }
+                }
+                // Update display with category indicator after loading
+                updateExerciseNameWithCategory();
+            }).catch(error => {
+                console.error('Error loading exercise individual category:', error);
+                // Still update display even if loading fails
+                updateExerciseNameWithCategory();
+            });
             
             // Load exercise statistics and setup the enhanced interface
             getExerciseStats(exerciseId).then(stats => {
@@ -1475,6 +1728,9 @@
                 
                 // Store the selected exercise ID for other functions to use
                 window.selectedExerciseId = exerciseId;
+                
+                // Update the daily exercise counter
+                updateDailyExerciseCounter();
             });
         }
 
@@ -1531,6 +1787,154 @@
             }
         }
 
+        // Function to update daily exercise counter - queries database for today's saved workouts
+        function updateDailyExerciseCounter() {
+            console.log("=== updateDailyExerciseCounter START (Database Query Version) ===");
+            
+            // Check if user is authenticated
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                console.log("User not authenticated, showing 0 exercises");
+                updateCounterDisplay({}, 0);
+                return;
+            }
+            
+            console.log("User authenticated:", user.uid);
+            
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + 
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(today.getDate()).padStart(2, '0');
+            
+            console.log("Today's date object:", today);
+            console.log("Formatted date string:", todayStr);
+            console.log("Querying workouts for user:", user.uid, "date:", todayStr);
+            
+            // First, let's see what dates exist in the database for this user
+            db.collection('workouts')
+                .where('userId', '==', user.uid)
+                .get()
+                .then(allWorkouts => {
+                    console.log("All workouts in database for user:");
+                    allWorkouts.forEach(doc => {
+                        const data = doc.data();
+                        console.log("- Workout ID:", doc.id, "Date:", data.date, "Categories:", data.categories?.length || 0);
+                    });
+                });
+            
+            // Query today's workouts from database - check both timestamp and date string formats
+            Promise.all([
+                // Query by today's date string (if any exist in this format)
+                db.collection('workouts')
+                    .where('userId', '==', user.uid)
+                    .where('date', '==', todayStr)
+                    .get(),
+                // Query by timestamp range for today
+                db.collection('workouts')
+                    .where('userId', '==', user.uid)
+                    .where('date', '>=', new Date(todayStr))
+                    .where('date', '<', new Date(todayStr + 'T23:59:59'))
+                    .get()
+            ]).then(([stringDateResults, timestampResults]) => {
+                console.log("String date results:", stringDateResults.size);
+                console.log("Timestamp results:", timestampResults.size);
+                
+                // Combine both results (avoid duplicates)
+                const allDocs = new Map();
+                stringDateResults.forEach(doc => allDocs.set(doc.id, doc));
+                timestampResults.forEach(doc => allDocs.set(doc.id, doc));
+                
+                console.log("Total unique workouts for today:", allDocs.size);
+                
+                const categoryCounts = {};
+                let totalExercises = 0;
+                
+                allDocs.forEach((doc) => {
+                    const workoutData = doc.data();
+                    console.log("Processing workout:", doc.id, workoutData);
+                    
+                    // Handle new format with exercises array
+                    if (workoutData.exercises && Array.isArray(workoutData.exercises)) {
+                        workoutData.exercises.forEach(exercise => {
+                            console.log("Processing exercise (new format):", exercise.name, "Individual category:", exercise.individualCategory);
+                            
+                            if (exercise.individualCategory) {
+                                const categoryName = individualCategories.find(cat => cat.id === exercise.individualCategory)?.name || exercise.individualCategory;
+                                categoryCounts[categoryName] = (categoryCounts[categoryName] || 0) + 1;
+                                totalExercises++;
+                                console.log(`Incremented ${categoryName} to:`, categoryCounts[categoryName]);
+                            }
+                        });
+                    }
+                    
+                    // Handle old format with categories array  
+                    if (workoutData.categories && Array.isArray(workoutData.categories)) {
+                        workoutData.categories.forEach(category => {
+                            console.log("Processing category (old format):", category.name);
+                            
+                            if (category.exercises && Array.isArray(category.exercises)) {
+                                category.exercises.forEach(exercise => {
+                                    console.log("Processing exercise in category:", exercise.name, "Exercise ID:", exercise.exerciseId);
+                                    
+                                    // For old format, we need to look up the individual category from the exercise ID
+                                    if (exercise.exerciseId && exerciseIndividualCategories[exercise.exerciseId]) {
+                                        const individualCategoryId = exerciseIndividualCategories[exercise.exerciseId];
+                                        const categoryName = individualCategories.find(cat => cat.id === individualCategoryId)?.name || individualCategoryId;
+                                        categoryCounts[categoryName] = (categoryCounts[categoryName] || 0) + 1;
+                                        totalExercises++;
+                                        console.log(`Incremented ${categoryName} to:`, categoryCounts[categoryName]);
+                                    } else {
+                                        // Fallback: use the category name directly (old behavior)
+                                        const categoryName = category.name;
+                                        if (categoryName) {
+                                            // Handle combined categories like "Chest and Triceps"
+                                            if (categoryName.includes(' and ') || categoryName.includes(' & ')) {
+                                                const parsedCategories = categoryName.split(/ and | & /);
+                                                parsedCategories.forEach(cat => {
+                                                    const cleanCat = cat.trim();
+                                                    categoryCounts[cleanCat] = (categoryCounts[cleanCat] || 0) + 1;
+                                                });
+                                                totalExercises += parsedCategories.length;
+                                            } else {
+                                                categoryCounts[categoryName] = (categoryCounts[categoryName] || 0) + 1;
+                                                totalExercises++;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+                
+                console.log("Final database counts:", categoryCounts, "Total:", totalExercises);
+                
+                // Update the counter display
+                updateCounterDisplay(categoryCounts, totalExercises);
+            })
+                .catch(error => {
+                    console.error('Error querying today\'s workouts:', error);
+                    
+                    // Fallback to showing 0
+                    updateCounterDisplay({}, 0);
+                });
+            
+            console.log("=== updateDailyExerciseCounter END ===");
+        }
+
+        function updateCounterDisplay(categoryCounts, totalExercises) {
+            const counterContent = document.getElementById('counter-content');
+            if (totalExercises === 0) {
+                counterContent.innerHTML = 'Today: 0 exercises';
+            } else {
+                const categoryText = Object.entries(categoryCounts)
+                    .map(([category, count]) => `${category}: ${count}`)
+                    .join(' • ');
+                counterContent.innerHTML = `Today: ${categoryText} (${totalExercises} total)`;
+            }
+        }
+
         // Add this function after your existing functions
 
 async function saveWorkout() {
@@ -1549,41 +1953,54 @@ async function saveWorkout() {
 
     let hasData = false;
 
-    // Check all categories for exercises
+    // Check all active categories for exercises
     allCategories.forEach((categoryContainer) => {
         const categoryId = categoryContainer.id.replace('exercise-container-', '');
-        const exercises = categoryContainer.querySelectorAll('.exercise-item');
         const categoryExercises = [];
 
-        // Collect data from all exercises in this category
-        exercises.forEach((exercise) => {
-            const exerciseId = exercise.querySelector('.set-container').id.replace('sets-', '');
-            const exerciseName = exercise.querySelector('.exercise-name').textContent;
-            const sets = [];
+        // Check if this category has a selected exercise with input data
+        const selectedExerciseDisplay = categoryContainer.querySelector('.selected-exercise-display.active');
+        if (selectedExerciseDisplay) {
+            const exerciseNameElement = selectedExerciseDisplay.querySelector('.selected-exercise-name');
+            const exerciseName = exerciseNameElement ? exerciseNameElement.textContent.trim() : '';
+            
+            // Get the exercise ID from the select dropdown
+            const selectElement = categoryContainer.querySelector('.exercise-select');
+            const exerciseId = selectElement ? selectElement.value : '';
+            
+            if (exerciseName && exerciseId) {
+                const sets = [];
 
-            // Collect data from each set
-            for (let i = 1; i <= 3; i++) {
-                const setInput = document.getElementById(`${exerciseId}_set${i}`);
-                const kgInput = document.getElementById(`${exerciseId}_kg${i}`);
-                
-                if (setInput?.value || kgInput?.value) {
-                    sets.push({
-                        setNumber: i,
-                        reps: setInput?.value || null,
-                        weight: kgInput?.value || null
+                // Collect data from each set
+                for (let i = 1; i <= 3; i++) {
+                    const setInputId = `${exerciseId}_set${i}`;
+                    const kgInputId = `${exerciseId}_kg${i}`;
+                    
+                    // Get values from input fields or from saved exerciseData as fallback
+                    const setInput = document.getElementById(setInputId);
+                    const kgInput = document.getElementById(kgInputId);
+                    const repsValue = setInput?.value || exerciseData[setInputId] || '';
+                    const weightValue = kgInput?.value || exerciseData[kgInputId] || '';
+                    
+                    if (repsValue || weightValue) {
+                        sets.push({
+                            setNumber: i,
+                            reps: repsValue || null,
+                            weight: weightValue || null
+                        });
+                        hasData = true;
+                    }
+                }
+
+                if (sets.length > 0) {
+                    categoryExercises.push({
+                        exerciseId: exerciseId,
+                        name: exerciseName,
+                        sets: sets
                     });
-                    hasData = true;
                 }
             }
-
-            if (sets.length > 0) {
-                categoryExercises.push({
-                    exerciseId: exerciseId,
-                    name: exerciseName,
-                    sets: sets
-                });
-            }
-        });
+        }
 
         // Only add category if it has exercises with data
         if (categoryExercises.length > 0) {
@@ -1607,18 +2024,30 @@ async function saveWorkout() {
         // Show success message
         alert('Workout saved successfully!');
         
-        // Clear all inputs but keep exercises
-        document.querySelectorAll('.exercise-item').forEach((exercise) => {
-            const setsContainer = exercise.querySelector('.set-container');
-            const inputs = setsContainer.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.value = '';
-            });
+        // Clear all inputs but keep exercises selected
+        document.querySelectorAll('.exercise-container').forEach((categoryContainer) => {
+            const selectElement = categoryContainer.querySelector('.exercise-select');
+            const exerciseId = selectElement ? selectElement.value : '';
+            
+            if (exerciseId) {
+                for (let i = 1; i <= 3; i++) {
+                    const setInput = document.getElementById(`${exerciseId}_set${i}`);
+                    const kgInput = document.getElementById(`${exerciseId}_kg${i}`);
+                    if (setInput) setInput.value = '';
+                    if (kgInput) kgInput.value = '';
+                    
+                    // Clear from exerciseData as well
+                    delete exerciseData[`${exerciseId}_set${i}`];
+                    delete exerciseData[`${exerciseId}_kg${i}`];
+                }
+            }
         });
         
-        // Clear temporary data
-        exerciseData = {};
-        localStorage.removeItem('exerciseData');
+        // Update localStorage
+        localStorage.setItem('exerciseData', JSON.stringify(exerciseData));
+        
+        // Update the counter
+        updateDailyExerciseCounter();
         
     } catch (error) {
         console.error('Error saving workout:', error);
@@ -2045,39 +2474,108 @@ async function saveWorkout() {
             });
 
             Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(dateStr => {
-                const [day, month, year] = dateStr.split(/[\/\-\.]/).map(Number);
-                const dateObj = new Date(year, month - 1, day);
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                html += `<div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
-                    <div style="font-weight: bold; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">${dateStr} <span style='color:black;'>${dayName}</span></div>`;
-
-        // Group categories by name for this date
-        const categoryMap = {};
-        grouped[dateStr].forEach(workout => {
-            const categories = workout.categories.filter(cat => currentCategoryFilter === 'all' || cat.categoryId === currentCategoryFilter);
-            categories.forEach(category => {
-                if (!category || !category.name || !category.exercises) return;
-                if (!categoryMap[category.name]) categoryMap[category.name] = [];
-                categoryMap[category.name].push(...category.exercises);
-            });
-        });
-
-        Object.keys(categoryMap).forEach(categoryName => {
-            html += `<div style="margin-bottom: 10px;"><div style="color: #ffd700; margin-bottom: 5px; font-weight: bold;">${categoryName}</div>`;
-            categoryMap[categoryName].forEach(exercise => {
-                if (!exercise || !exercise.name || !exercise.sets) return;
-                html += `<div style="margin-left: 15px; margin-bottom: 8px;"><div style="font-weight: 500;">${exercise.name}</div><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 5px; margin-left: 15px; color: #666; font-size: 0.9em;">`;
-                exercise.sets.forEach(set => {
-                    if (!set) return;
-                    html += `<div>Set ${set.setNumber}: ${set.reps || '0'} × ${set.weight || '0'}kg</div>`;
+                // First, check if there are any exercises for the selected category on this date
+                const categoryMap = {};
+                grouped[dateStr].forEach(workout => {
+                    const categories = workout.categories.filter(cat => currentCategoryFilter === 'all' || cat.categoryId === currentCategoryFilter);
+                    categories.forEach(category => {
+                        if (!category || !category.name || !category.exercises) return;
+                        if (!categoryMap[category.name]) categoryMap[category.name] = [];
+                        categoryMap[category.name].push(...category.exercises);
+                    });
                 });
-                html += `</div></div>`;
-            });
-            html += `</div>`;
-        });
 
-        html += `</div>`;
-    });
+                // Only show the date if there are exercises for the selected category
+                if (Object.keys(categoryMap).length > 0) {
+                    const [day, month, year] = dateStr.split(/[\/\-\.]/).map(Number);
+                    const dateObj = new Date(year, month - 1, day);
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                    
+                    // Calculate individual category counters using exercise cache
+                    const categoryCounts = {};
+                    Object.keys(categoryMap).forEach(categoryName => {
+                        categoryMap[categoryName].forEach(exercise => {
+                            // Try to get individual category from cache first
+                            if (exercise.exerciseId && exerciseIndividualCategories[exercise.exerciseId]) {
+                                const individualCategoryId = exerciseIndividualCategories[exercise.exerciseId];
+                                const individualCategoryName = individualCategories.find(cat => cat.id === individualCategoryId)?.name || individualCategoryId;
+                                categoryCounts[individualCategoryName] = (categoryCounts[individualCategoryName] || 0) + 1;
+                                console.log(`History: Found individual category for ${exercise.name}: ${individualCategoryName}`);
+                            } else {
+                                // Fallback: Handle combined categories by parsing the category name
+                                console.log(`History: No individual category found for ${exercise.name}, using fallback parsing for ${categoryName}`);
+                                
+                                // Enhanced parsing for various separator formats
+                                let parsedCategories = [];
+                                if (categoryName.includes(' and ') || categoryName.includes(' & ') || categoryName.includes(', ')) {
+                                    // Split by multiple possible separators
+                                    parsedCategories = categoryName.split(/ and | & |, |,/).map(cat => cat.trim()).filter(cat => cat.length > 0);
+                                } else {
+                                    parsedCategories = [categoryName];
+                                }
+                                
+                                // Map common variations to standard names
+                                const categoryMapping = {
+                                    'biceps': 'Biceps',
+                                    'shoulder': 'Shoulders', 
+                                    'shoulders': 'Shoulders',
+                                    'back': 'Back',
+                                    'abs': 'Abs',
+                                    'core': 'Abs', // Map Core to Abs since they're similar
+                                    'chest': 'Chest',
+                                    'triceps': 'Triceps',
+                                    'legs': 'Legs'
+                                };
+                                
+                                parsedCategories.forEach(cat => {
+                                    const cleanCat = cat.trim();
+                                    const standardName = categoryMapping[cleanCat.toLowerCase()] || cleanCat;
+                                    categoryCounts[standardName] = (categoryCounts[standardName] || 0) + 1;
+                                    console.log(`History: Mapped ${cleanCat} -> ${standardName}`);
+                                });
+                            }
+                        });
+                    });
+                    
+                    const totalExercises = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
+                    const categoryCountText = Object.entries(categoryCounts)
+                        .map(([category, count]) => `${category}: ${count}`)
+                        .join(' • ');
+                    
+                    html += `<div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                        <div style="font-weight: bold; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">${dateStr} <span style='color:black;'>${dayName}</span></div>
+                        <div style="margin-bottom: 15px; padding: 8px; background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 6px; text-align: center; font-size: 13px; color: #ffd700; font-weight: 500;">
+                            ${categoryCountText} (${totalExercises} total)
+                        </div>`;
+
+                    Object.keys(categoryMap).forEach(categoryName => {
+                        html += `<div style="margin-bottom: 10px;"><div style="color: #ffd700; margin-bottom: 5px; font-weight: bold;">${categoryName}</div>`;
+                        categoryMap[categoryName].forEach(exercise => {
+                            if (!exercise || !exercise.name || !exercise.sets) return;
+                            
+                            // Check if exercise has individual category
+                            let categoryIndicator = '';
+                            if (exercise.exerciseId && exerciseIndividualCategories[exercise.exerciseId]) {
+                                const individualCategoryId = exerciseIndividualCategories[exercise.exerciseId];
+                                const individualCategoryName = individualCategories.find(cat => cat.id === individualCategoryId)?.name || individualCategoryId;
+                                categoryIndicator = `<span style="color: #4CAF50; font-size: 0.8em; margin-left: 8px; background: rgba(76, 175, 80, 0.1); padding: 2px 6px; border-radius: 4px;">[${individualCategoryName}]</span>`;
+                            } else {
+                                categoryIndicator = `<span style="color: #FF5722; font-size: 0.8em; margin-left: 8px; background: rgba(255, 87, 34, 0.1); padding: 2px 6px; border-radius: 4px; cursor: pointer;" title="Individual category not set - needs to be updated">⚠️ [Missing Category]</span>`;
+                            }
+                            
+                            html += `<div style="margin-left: 15px; margin-bottom: 8px;"><div style="font-weight: 500; display: flex; align-items: center;">${exercise.name}${categoryIndicator}</div><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 5px; margin-left: 15px; color: #666; font-size: 0.9em;">`;
+                            exercise.sets.forEach(set => {
+                                if (!set) return;
+                                html += `<div>Set ${set.setNumber}: ${set.reps || '0'} × ${set.weight || '0'}kg</div>`;
+                            });
+                            html += `</div></div>`;
+                        });
+                        html += `</div>`;
+                    });
+
+                    html += `</div>`;
+                }
+            });
 
     if (html === '<div style="display: grid; gap: 15px;">') {
         html += '<p style="text-align: center; color: #666;">No workouts found for selected criteria</p>';
@@ -2093,6 +2591,14 @@ async function saveWorkout() {
 
         function closeBodyWeightModal() {
             document.getElementById('body-weight-modal').style.display = 'none';
+        }
+
+        function closeWeightHistory() {
+            document.getElementById('weight-history-modal').style.display = 'none';
+        }
+
+        function closeWeightProgress() {
+            document.getElementById('weight-progress-modal').style.display = 'none';
         }
 
         function saveBodyWeight() {
@@ -2537,5 +3043,31 @@ function formatDate(date) {
         "></div>
     </div>
 </div>
+
+<!-- Exercise Add/Edit Modal -->
+<div id="exercise-modal" class="modal" onclick="if(event.target === this) closeExerciseModal()">
+    <div class="modal-content">
+        <button class="modal-close-btn" onclick="closeExerciseModal()">×</button>
+        <h2 id="exercise-modal-title">Add Exercise</h2>
+        
+        <div class="form-group">
+            <label for="exercise-name-input">Exercise Name:</label>
+            <input type="text" id="exercise-name-input" placeholder="Enter exercise name" style="margin-bottom: 15px;">
+        </div>
+        
+        <div class="form-group">
+            <label for="exercise-category-select">Individual Category:</label>
+            <select id="exercise-category-select" style="margin-bottom: 20px;">
+                <option value="">Select muscle group...</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="saveExerciseFromModal()" style="background: linear-gradient(135deg, #4CAF50, #45a049) !important; flex: 1;">Save</button>
+            <button onclick="closeExerciseModal()" style="background: #666; flex: 1;">Cancel</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
