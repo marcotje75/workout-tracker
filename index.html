@@ -537,12 +537,35 @@
             border: 2px solid #ffd700 !important;
             font-weight: 600;
             transition: background 0.2s, color 0.2s;
+            min-height: 40px;
+            font-size: 14px;
+            text-align: center;
         }
 
         .period-btn.active {
             background: #1a1a1a !important;
             color: #ffd700 !important;
             border: 2px solid #ffd700 !important;
+        }
+
+        .category-filter-btn {
+            padding: 8px 4px !important;
+            font-size: 12px !important;
+            background: linear-gradient(135deg, #666, #555) !important;
+            color: white !important;
+            border: 1px solid #777 !important;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .category-filter-btn.active {
+            background: linear-gradient(135deg, #ffd700, #ffb700) !important;
+            color: #1a1a1a !important;
+            border: 1px solid #ffd700 !important;
         }
     </style>
 </head>
@@ -1627,15 +1650,13 @@ async function saveWorkout() {
                     <div class="modal-content">
                         <button class="modal-close-btn" onclick="document.getElementById('workout-progress-modal').style.display='none'">×</button>
                         <h2 style="margin-bottom:20px;">Workout Progress</h2>
-                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:15px;">
-                            <div style="display:flex;justify-content:center;gap:8px;margin-bottom:15px;">
+                        <div style="display:grid;grid-template-columns:repeat(2, 1fr) repeat(2, 1fr);gap:6px;margin-bottom:15px;">
                                 <button onclick="loadWorkoutProgress(7)" class="period-btn active">1 Week</button>
                                 <button onclick="loadWorkoutProgress(30)" class="period-btn">1 Month</button>
                                 <button onclick="loadWorkoutProgress(180)" class="period-btn">6 Months</button>
                                 <button onclick="loadWorkoutProgress(365)" class="period-btn">1 Year</button>
-                            </div>
                         </div>
-                        <div id="progress-category-buttons" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px;"></div>
+                        <div id="progress-category-buttons" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:20px;"></div>
                         <div id="workout-progress-content" style="max-height:400px;overflow-y:auto;margin-bottom:20px;"></div>
                     </div>`;
                 document.body.appendChild(modal);
@@ -2450,8 +2471,8 @@ function formatDate(date) {
         <h2 style="margin-bottom: 20px;">Weight History</h2>
         <div style="
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
             margin-bottom: 20px;
         ">
             <button onclick="loadWeightHistory(7)" class="period-btn active">1 Week</button>
@@ -2504,8 +2525,8 @@ function formatDate(date) {
         </div>
         <div id="category-filter-buttons" style="
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
             margin-bottom: 20px;
         ">
         </div>
